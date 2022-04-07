@@ -8,11 +8,23 @@ process trimFASTQ
         tuple val(sampleId), path(read1), path(read2)
 
     output:
-        tuple val(sampleId), path("trimmed/${read1}"), path("trimmed/${read2}")
+        tuple val(sampleId), path("${read1.baseName}*.fastq.gz"), path("${read2.baseName}*.fastq.gz")
 
     shell:
         template "trim.sh"
 }
+
+/*
+process prependUMI
+{
+    input:
+        tuple val(sampleId), path(read1), path(read2), path(umiread)
+        
+    shell:
+    
+    
+}
+*/
 
 /*
  * Main work flow.
@@ -24,7 +36,9 @@ workflow
             .splitCsv(header: true, quote: '"')
             .map {
                 row ->
-                tuple row.PlatformUnit, file(row.Read1), file(row.Read2)
+                tuple row.PlatformUnit,
+                      file("${params.FASTQ_DIR}/${row.Read1}", checkIfExists: true),
+                      file("${params.FASTQ_DIR}/${row.Read2}", checkIfExists: true)
             }
 
     trimOut = fastqChannel.branch
@@ -36,6 +50,6 @@ workflow
     trimFASTQ(trimOut.toTrimChannel)
 
     afterTrimming = trimOut.noTrimChannel.mix(trimFASTQ.out)
-
+    
     afterTrimming.view()
 }

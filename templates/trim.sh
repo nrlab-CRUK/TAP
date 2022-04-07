@@ -1,10 +1,4 @@
-if ! [ -d trimmed ]
-then
-    mkdir trimmed
-fi
-
 java -jar /opt/AGeNT/SurecallTrimmer_v4.0.1.jar \
      -fq1 "!{read1}" \
      -fq2 "!{read2}" \
-     -xt -minFractionRead !{params.TRIM_MINIMUM_FRACTION_READ} -qualityTrimming !{params.TRIM_QUALITY_THRESHOLD} \
-     -out_loc trimmed
+     -xt -minFractionRead !{params.TRIM_MINIMUM_FRACTION_READ} -qualityTrimming !{params.TRIM_QUALITY_THRESHOLD}
