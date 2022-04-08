@@ -1,3 +1,0 @@
-[submodule "alignment"]
-	path = alignment
-	url = https://github.com/crukci-bioinformatics/nf-alignment.git

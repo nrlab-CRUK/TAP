@@ -2,6 +2,8 @@
 
 nextflow.enable.dsl = 2
 
+include { bwamem_pe } from './pipelines/bwamem_pe'
+
 process trimFASTQ
 {
     input:
@@ -38,9 +40,11 @@ process prependUMI
  */
 workflow
 {
-    fastqChannel =
+    csvChannel =
         channel.fromPath("alignment.csv")
             .splitCsv(header: true, quote: '"')
+
+    fastqChannel = csvChannel
             .map {
                 row ->
                 // This is a bit of a hack. We'll come back to a better way to do it.
@@ -64,5 +68,5 @@ workflow
 
     prependUMI(afterTrimming)
 
-    prependUMI.out.view()
+    bwamem_pe(prependUMI.out, csvChannel)
 }
