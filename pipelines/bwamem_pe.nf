@@ -2,8 +2,8 @@
  * BWAmem paired end pipeline inner work flow.
  */
 
-include { extractChunkNumber; splitFastq as split_fastq_1; splitFastq as split_fastq_2 } from "../processes/fastq"
-include { pairedend } from "./pairedend"
+include { extractChunkNumber; splitFastq as splitFastq1; splitFastq as splitFastq2 } from "../processes/fastq"
+include { picard_addreadgroups; picard_fixmate; picard_merge_or_markduplicates } from "../processes/picard"
 
 /*
  * Align with BWAmem (single read or paired end).
@@ -33,39 +33,39 @@ process bwa_mem
 workflow bwamem_pe
 {
     take:
-        fastq_channel
-        csv_channel
-
+        fastqChannel
+        csvChannel
+        
     main:
-        bwamem2_index_path = file(params.BWAMEM2_INDEX)
-        bwamem2_index_channel = channel.of(tuple bwamem2_index_path.parent, bwamem2_index_path.name)
+        bwamem2IndexPath = file(params.BWAMEM2_INDEX)
+        bwamem2IndexChannel = channel.of(tuple bwamem2IndexPath.parent, bwamem2IndexPath.name)
 
         // Split into two channels, one read in each, for fastq splitting.
 
-        read1_channel =
-            fastq_channel
+        read1Channel =
+            fastqChannel
             .map
             {
                 sampleId, read1, read2 ->
                 tuple sampleId, 1, read1
             }
 
-        read2_channel =
-            fastq_channel
+        read2Channel =
+            fastqChannel
             .map
             {
                 sampleId, read1, read2 ->
                 tuple sampleId, 2, read2
             }
 
-        split_fastq_1(read1_channel)
-        split_fastq_2(read2_channel)
+        splitFastq1(read1Channel)
+        splitFastq2(read2Channel)
 
         // Flatten the list of files in both channels to have two channels with
         // a single file per item. Also extract the chunk number from the file name.
 
-        per_chunk_channel_1 =
-            split_fastq_1.out
+        perChunkChannel1 =
+            splitFastq1.out
             .transpose()
             .map
             {
@@ -73,8 +73,8 @@ workflow bwamem_pe
                 tuple sampleId, extractChunkNumber(fastq), fastq
             }
 
-        per_chunk_channel_2 =
-            split_fastq_2.out
+        perChunkChannel2 =
+            splitFastq2.out
             .transpose()
             .map
             {
@@ -85,15 +85,28 @@ workflow bwamem_pe
         // Combine these channels by base name and chunk number, and present the
         // two individual files as a list of two.
 
-        combined_chunk_channel = per_chunk_channel_1
-            .combine(per_chunk_channel_2, by: 0..1)
+        combinedChunkChannel = perChunkChannel1
+            .combine(perChunkChannel2, by: 0..1)
             .map
             {
                 sampleId, chunk, r1, r2 ->
                 tuple sampleId, [ r1, r2 ]
             }
-            .combine(bwamem2_index_channel)
+            .combine(bwamem2IndexChannel)
 
-        bwa_mem(combined_chunk_channel)
-        pairedend(bwa_mem.out, csv_channel)
+        bwa_mem(combinedChunkChannel)
+
+        // Add sequencing info back to the channel for read groups.
+        // It is available from sequencing_info_channel, the rows from the CSV file.
+        readGroupsChannel = bwa_mem.out
+            .combine(csvChannel.map { tuple it.PlatformUnit, it }, by: 0)
+
+        picard_addreadgroups(readGroupsChannel)
+        picard_fixmate(picard_addreadgroups.out)
+
+        // Group the outputs by base name.
+        picard_merge_or_markduplicates(picard_fixmate.out.groupTuple())
+
+    emit:
+        bamChannel = picard_merge_or_markduplicates.out.merged_bam
 }
