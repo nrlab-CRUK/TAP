@@ -2,37 +2,29 @@
 
 nextflow.enable.dsl = 2
 
+include { trimFASTQ; prependUMI } from './processes/fastq'
 include { bwamem_pe } from './pipelines/bwamem_pe'
+include { picard_sortsam } from './processes/picard'
 
-process trimFASTQ
+process connor
 {
     input:
-        tuple val(sampleId), path(read1), path(read2), path(umiread)
+        tuple val(sampleId), path(bam), path(bamIndex)
 
     output:
-        tuple val(sampleId), path("${read1.baseName}*.fastq.gz"), path("${read2.baseName}*.fastq.gz"), path(umiread)
+        tuple val(sampleId), path(connorFile)
 
     shell:
-        template "trim.sh"
-}
+        connorFile = "${sampleId}.connor.bam"
 
-process prependUMI
-{
-    /*
-     * Can optimise this later to do each read as a separate process.
-     */
-
-    input:
-        tuple val(sampleId), path(read1), path(read2), path(umiread)
-
-    output:
-        tuple val(sampleId), path(read1out), path(read2out)
-
-    shell:
-        read1out = "${sampleId}.umi.r_1.fq.gz"
-        read2out = "${sampleId}.umi.r_2.fq.gz"
-
-        template "prependUMI.sh"
+        """
+        connor -v --force \
+            -s ${params.CONNOR_MIN_FAMILY_SIZE_THRESHOLD} \
+            -f ${params.CONNOR_CONSENSUS_FREQ_THRESHOLD} \
+            --umt_length ${params.CONNOR_UMT_LENGTH} \
+            "!{bam}" \
+            "!{connorFile}"
+        """
 }
 
 /*
@@ -68,5 +60,5 @@ workflow
 
     prependUMI(afterTrimming)
 
-    bwamem_pe(prependUMI.out, csvChannel)
+    bwamem_pe(prependUMI.out, csvChannel) | connor | picard_sortsam
 }

@@ -35,7 +35,7 @@ workflow bwamem_pe
     take:
         fastqChannel
         csvChannel
-        
+
     main:
         bwamem2IndexPath = file(params.BWAMEM2_INDEX)
         bwamem2IndexChannel = channel.of(tuple bwamem2IndexPath.parent, bwamem2IndexPath.name)

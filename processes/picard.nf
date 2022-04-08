@@ -155,14 +155,11 @@ process picard_merge_or_markduplicates
 {
     label "picard"
 
-    publishDir params.BAM_DIR, mode: "link"
-
     input:
         tuple val(sampleId), path(inBams)
 
     output:
-        tuple val(sampleId), path(outBam), emit: merged_bam
-        path outBai
+        tuple val(sampleId), path(outBam), path(outBai), emit: merged_bam
         path metrics optional true
 
     shell:
@@ -182,3 +179,26 @@ process picard_merge_or_markduplicates
             template "picard/MergeSamFiles.sh"
         }
 }
+
+/*
+ * Sort a BAM file using Picard's 'SortSam' tool.
+ */
+process picard_sortsam
+{
+    label "picard"
+
+    input:
+        tuple val(sampleId), path(inBam)
+
+    output:
+        tuple val(sampleId), path(outBam), path(outBai)
+
+    shell:
+        outBam = "${sampleId}.sorted.bam"
+        outBai = "${sampleId}.sorted.bai"
+        javaMem = javaMemMB(task)
+        readsInRam = maxReadsInRam(javaMem, 100)
+
+        template "picard/SortSam.sh"
+}
+
