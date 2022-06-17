@@ -9,3 +9,4 @@ dependencies:
   - bioconda::picard=2.26.10-0
   - bioconda::samtools=1.14
   - bioconda::seqkit=0.13.2
+  - bioconda::trim-galore=0.6.7

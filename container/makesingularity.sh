@@ -11,9 +11,9 @@ fi
 
 spython recipe Dockerfile > singularity_spec.txt
 
-sudo rm -rf nrlabtap_sandbox
-sudo singularity build --sandbox nrlabtap_sandbox singularity_spec.txt
-
+sudo rm -rf nrlabtap_sandbox nrlabtap.sif
+#sudo singularity build --sandbox nrlabtap_sandbox singularity_spec.txt
+sudo singularity build nrlabtap.sif singularity_spec.txt
 
 # See https://stackoverflow.com/a/60316979
 # sudo singularity build my_container.sif docker-daemon://local/my_container

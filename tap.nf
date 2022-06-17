@@ -2,7 +2,8 @@
 
 nextflow.enable.dsl = 2
 
-include { trimFASTQ; prependUMI } from './processes/fastq'
+include { trimFASTQ } from './processes/trimming'
+include { prependUMI } from './processes/fastq'
 include { bwamem_pe } from './pipelines/bwamem_pe'
 include { picard_sortsam } from './processes/picard'
 

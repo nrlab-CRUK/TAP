@@ -2,18 +2,6 @@
  * Generic FASTQ processes.
  */
 
-process trimFASTQ
-{
-    input:
-        tuple val(sampleId), path(read1), path(read2), path(umiread)
-
-    output:
-        tuple val(sampleId), path("${read1.baseName}*.fastq.gz"), path("${read2.baseName}*.fastq.gz"), path(umiread)
-
-    shell:
-        template "trim.sh"
-}
-
 process prependUMI
 {
     /*
