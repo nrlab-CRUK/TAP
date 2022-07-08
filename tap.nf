@@ -2,7 +2,7 @@
 
 nextflow.enable.dsl = 2
 
-include { trimFASTQ } from './processes/trimming'
+include { trimGalore; tagtrim } from './processes/trimming'
 include { prependUMI } from './processes/fastq'
 include { bwamem_pe } from './pipelines/bwamem_pe'
 include { picard_sortsam } from './processes/picard'
@@ -40,26 +40,28 @@ workflow
     fastqChannel = csvChannel
             .map {
                 row ->
-                // This is a bit of a hack. We'll come back to a better way to do it.
-                // For SS XT, the UMI read is read 2.
-                umiread = row.Read1.replaceAll(/\.r_1\./, ".r_2.")
                 tuple row.PlatformUnit,
+                      row['Index Type'],
                       file("${params.FASTQ_DIR}/${row.Read1}", checkIfExists: true),
                       file("${params.FASTQ_DIR}/${row.Read2}", checkIfExists: true),
-                      file("${params.FASTQ_DIR}/${umiread}", checkIfExists: true)
+                      file("${params.FASTQ_DIR}/${row.UmiRead}", checkIfExists: false)
             }
 
     trimOut = fastqChannel.branch
     {
-        toTrimChannel : params.TRIM_FASTQ
+        tagtrimChannel : params.TRIM_FASTQ && it[1] == 'ThruPLEX DNA-seq Dualindex'
+        trimGaloreChannel : params.TRIM_FASTQ
         noTrimChannel : true
     }
 
-    trimFASTQ(trimOut.toTrimChannel)
 
-    afterTrimming = trimOut.noTrimChannel.mix(trimFASTQ.out)
+    trimGalore(trimOut.trimGaloreChannel)
 
-    prependUMI(afterTrimming)
+    tagtrim(trimOut.tagtrimChannel)
 
-    bwamem_pe(prependUMI.out, csvChannel) | connor | picard_sortsam
+    afterTrimming = trimOut.noTrimChannel.mix(trimGalore.out).mix(tagtrim.out)
+
+    // prependUMI(afterTrimming)
+
+    // bwamem_pe(prependUMI.out, csvChannel) | connor | picard_sortsam
 }

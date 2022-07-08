@@ -3,7 +3,7 @@ FROM rockylinux:latest
 RUN dnf install -y dnf-plugins-core epel-release && \
     dnf makecache && \
     dnf update -y && \
-    dnf install -y gcc git curl procps htslib-devel && \
+    dnf install -y curl gcc git htslib-devel java-11-openjdk-devel procps unzip wget && \
     dnf clean all
 
 # Fastq splitter
@@ -13,6 +13,19 @@ RUN git clone https://github.com/vasisht/fastq_splitter.git; \
     gcc -o /usr/local/bin/splitfastq fastq_splitter.c -lz; \
     popd; \
     rm -rf fastq_splitter
+
+# Groovy 4
+# There is no package for Groovy in Anaconda
+
+ARG GROOVY_VERSION=4.0.3
+
+RUN wget -q \
+    -O /tmp/groovy-${GROOVY_VERSION}.zip \
+    "https://www.apache.org/dyn/closer.lua/groovy/${GROOVY_VERSION}/distribution/apache-groovy-binary-${GROOVY_VERSION}.zip?action=download" && \
+    unzip -d /opt /tmp/groovy-${GROOVY_VERSION}.zip && \
+    rm -f /tmp/groovy-${GROOVY_VERSION}.zip
+
+# Conda
 
 ARG CONDA_VERSION=py39_4.10.3
 
@@ -28,4 +41,5 @@ RUN /opt/conda/bin/conda env create -f nrlab_tap.yml
 
 RUN /opt/conda/bin/conda clean -a
 
-ENV PATH /opt/conda/envs/nrlab_tap/bin:$PATH
+ENV JAVA_HOME /usr/lib/jvm/java-11
+ENV PATH /opt/groovy-${GROOVY_VERSION}/bin:${JAVA_HOME}/bin:/opt/conda/envs/nrlab_tap/bin:$PATH
