@@ -19,6 +19,34 @@ import picocli.CommandLine.Option
 @Command(name = "tagtrim2", mixinStandardHelpOptions = true)
 public class TagTrim2 implements Callable<Integer>
 {
+    class Timing
+    {
+        long startTime
+        long time
+        int count
+        
+        void start()
+        {
+            startTime = System.nanoTime()
+        }
+        
+        void end()
+        {
+            time += System.nanoTime() - startTime
+            count++
+        }
+        
+        double mean()
+        {
+            return (time as double) / count
+        }
+        
+        String toString()
+        {
+            return Double.toString(mean())
+        }
+    }
+    
     static final String STEM = 'GTAGCTCA'
     static final String RSTEM = 'TGAGCTAC'
 
@@ -27,6 +55,10 @@ public class TagTrim2 implements Callable<Integer>
     private static final int ADDITIONAL_BASES = 3
 
     private Set stems = []
+    
+    private Timing reading = new Timing()
+    private Timing processing = new Timing()
+    private Timing writing = new Timing()
 
     @Option(names = "--read1", required = true, description = "Read one FASTQ file (input).")
     File read1In
@@ -102,8 +134,12 @@ public class TagTrim2 implements Callable<Integer>
     {
         while (reader1.hasNext() && reader2.hasNext())
         {
+            reading.start();
             FastqRecord r1 = reader1.next()
             FastqRecord r2 = reader2.next()
+            reading.end();
+            
+            processing.start()
             
             def b1 = r1.readString
             int insert1Start = getInsertStart(b1)
@@ -159,11 +195,19 @@ public class TagTrim2 implements Callable<Integer>
             String umi2 = b2[0..<UMI_LENGTH]
             String umiQ2 = r2.baseQualityString[0..<UMI_LENGTH]
 
+            processing.end()
+            
+            writing.start()
             writer1.write(new FastqRecord(r1.getReadName(), insert1, r1.baseQualityHeader, insertQ1))
             writerU1.write(new FastqRecord(r1.getReadName(), umi1, r1.baseQualityHeader, umiQ1))
             writer2.write(new FastqRecord(r2.getReadName(), insert2, r2.baseQualityHeader, insertQ2))
             writerU2.write(new FastqRecord(r2.getReadName(), umi2, r2.baseQualityHeader, umiQ2))
+            writing.end()
         }
+        
+        System.err.println("Mean reading time: ${reading} ns")
+        System.err.println("Mean processing time: ${processing} ns")
+        System.err.println("Mean writing time: ${writing} ns")
     }
 
     private String getReadId(FastqRecord r)

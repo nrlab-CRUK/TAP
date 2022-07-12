@@ -61,6 +61,25 @@ workflow bwamem_pe
         splitFastq1(read1Channel)
         splitFastq2(read2Channel)
 
+        // Get the number of chunks for each sample id (same for both channels).
+        // See https://groups.google.com/g/nextflow/c/fScdmB_w_Yw and
+        // https://github.com/danielecook/TIL/blob/master/Nextflow/groupKey.md
+
+        chunkCountChannel =
+            splitFastq1.out
+            .map
+            {
+                sampleId, read, fastqFiles ->
+                // Fastq files can be a single path or it can be a list of paths.
+                // Ideally, Nextflow would always return a list, even of length 1.
+                // See https://github.com/nextflow-io/nextflow/issues/2425
+                fastqFiles instanceof Collection
+                    ? tuple(sampleId, fastqFiles.size())
+                    : tuple(sampleId, 1)
+            }
+
+        chunkCountChannel.view()
+
         // Flatten the list of files in both channels to have two channels with
         // a single file per item. Also extract the chunk number from the file name.
 
@@ -104,8 +123,20 @@ workflow bwamem_pe
         picard_addreadgroups(readGroupsChannel)
         picard_fixmate(picard_addreadgroups.out)
 
+        // Combine the groups with groupTuple but using a group key with the
+        // number of chunks as made by chunkCountChannel.
+
+        groupedBamChannel =
+            picard_fixmate.out.combine(chunkCountChannel, by: 0)
+            .map
+            {
+                sampleId, bamFile, groupSize ->
+                tuple groupKey(sampleId, groupSize), bamFile
+            }
+            .groupTuple()
+
         // Group the outputs by base name.
-        picard_merge_or_markduplicates(picard_fixmate.out.groupTuple())
+        picard_merge_or_markduplicates(groupedBamChannel)
 
     emit:
         bamChannel = picard_merge_or_markduplicates.out.merged_bam

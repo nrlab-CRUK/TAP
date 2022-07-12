@@ -15,11 +15,13 @@ process trimGalore
     cpus   16
     memory '1G'
 
+    publishDir params.TRIMMED_FASTQ_DIR, mode: 'link'
+
     input:
-        tuple val(sampleId), val(indexType), path(read1), path(read2), path(umiread)
+        tuple val(sampleId), path(read1), path(read2), path(umiread)
 
     output:
-        tuple val(sampleId), val(indexType), path("${fileBase}_val_1.fq.gz"), path("${fileBase}_val_2.fq.gz"), path(umiread)
+        tuple val(sampleId), path("${fileBase}_val_1.fq.gz"), path("${fileBase}_val_2.fq.gz"), path(umiread)
 
     shell:
         fileBase = baseName(read1)
@@ -32,11 +34,13 @@ process tagtrim
     cpus   1
     memory '256M'
 
+    publishDir params.TRIMMED_FASTQ_DIR, mode: 'link'
+
     input:
-        tuple val(sampleId), val(indexType), path(read1In), path(read2In), path(noUmiRead)
+        tuple val(sampleId), path(read1In), path(read2In)
 
     output:
-        tuple val(sampleId), val(indexType), path(read1Out), path(read2Out), path(umi1Out), path(umi2Out)
+        tuple val(sampleId), path(read1Out), path(read2Out), path(umi1Out), path(umi2Out)
 
     shell:
         fileBase = baseName(read1In)

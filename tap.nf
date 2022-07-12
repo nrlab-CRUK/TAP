@@ -3,12 +3,14 @@
 nextflow.enable.dsl = 2
 
 include { trimGalore; tagtrim } from './processes/trimming'
-include { prependUMI } from './processes/fastq'
+include { prependSingleUMI as prependTagGalore; prependSingleUMI as prependNotTrimmed; prependDoubleUMI as prependTagTrim } from './processes/fastq'
 include { bwamem_pe } from './pipelines/bwamem_pe'
 include { picard_sortsam } from './processes/picard'
 
 process connor
 {
+    time '1h'
+
     input:
         tuple val(sampleId), path(bam), path(bamIndex)
 
@@ -54,14 +56,15 @@ workflow
         noTrimChannel : true
     }
 
+    galoreTrimmed = trimGalore(trimOut.trimGaloreChannel.map { s, t, r1, r2, rU -> tuple s, r1, r2, rU })
+    galorePrepended = prependTagGalore(galoreTrimmed)
 
-    trimGalore(trimOut.trimGaloreChannel)
+    tagtrimTrimmed = tagtrim(trimOut.tagtrimChannel.map { s, t, r1, r2, rU -> tuple s, r1, r2 })
+    tagtrimPrepended = prependTagTrim(tagtrimTrimmed)
 
-    tagtrim(trimOut.tagtrimChannel)
+    notrimPrepended = prependNotTrimmed(trimOut.noTrimChannel.map { s, t, r1, r2, rU -> tuple s, r1, r2, rU })
 
-    afterTrimming = trimOut.noTrimChannel.mix(trimGalore.out).mix(tagtrim.out)
+    afterTrimming = notrimPrepended.mix(galorePrepended).mix(tagtrimPrepended)
 
-    // prependUMI(afterTrimming)
-
-    // bwamem_pe(prependUMI.out, csvChannel) | connor | picard_sortsam
+    bwamem_pe(afterTrimming, csvChannel) | connor | picard_sortsam
 }
