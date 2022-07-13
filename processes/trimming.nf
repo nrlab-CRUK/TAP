@@ -15,8 +15,6 @@ process trimGalore
     cpus   16
     memory '1G'
 
-    publishDir params.TRIMMED_FASTQ_DIR, mode: 'link'
-
     input:
         tuple val(sampleId), path(read1), path(read2), path(umiread)
 
@@ -33,8 +31,6 @@ process tagtrim
 {
     cpus   1
     memory '256M'
-
-    publishDir params.TRIMMED_FASTQ_DIR, mode: 'link'
 
     input:
         tuple val(sampleId), path(read1In), path(read2In)

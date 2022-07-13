@@ -78,8 +78,6 @@ workflow bwamem_pe
                     : tuple(sampleId, 1)
             }
 
-        chunkCountChannel.view()
-
         // Flatten the list of files in both channels to have two channels with
         // a single file per item. Also extract the chunk number from the file name.
 
@@ -124,7 +122,9 @@ workflow bwamem_pe
         picard_fixmate(picard_addreadgroups.out)
 
         // Combine the groups with groupTuple but using a group key with the
-        // number of chunks as made by chunkCountChannel.
+        // number of chunks as made by chunkCountChannel. This allows groupTuple
+        // to know when each grouping has got all its bits together (i.e. all the
+        // chunks are done).
 
         groupedBamChannel =
             picard_fixmate.out.combine(chunkCountChannel, by: 0)

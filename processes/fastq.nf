@@ -24,16 +24,14 @@ process splitFastq
     input:
         tuple val(sampleId), val(read), path(fastqFile)
 
+    output:
         // Note: glob file name can return a list of files or a single file, not a list of one file.
         // See https://github.com/nextflow-io/nextflow/issues/2425
 
-    output:
         tuple val(sampleId), val(read), path("*-S??????.fq.gz")
 
     shell:
-        """
-        splitfastq -n 1000000 -p "!{sampleId}.r_!{read}" "!{fastqFile}"
-        """
+        template "fastq/splitFastq.sh"
 }
 
 process prependSingleUMI

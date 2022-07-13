@@ -46,12 +46,12 @@ workflow
                       row['Index Type'],
                       file("${params.FASTQ_DIR}/${row.Read1}", checkIfExists: true),
                       file("${params.FASTQ_DIR}/${row.Read2}", checkIfExists: true),
-                      file("${params.FASTQ_DIR}/${row.UmiRead}", checkIfExists: false)
+                      row.UmiRead ? file("${params.FASTQ_DIR}/${row.UmiRead}", checkIfExists: true) : null
             }
 
     trimOut = fastqChannel.branch
     {
-        tagtrimChannel : params.TRIM_FASTQ && it[1] == 'ThruPLEX DNA-seq Dualindex'
+        tagtrimChannel : it[1] == 'ThruPLEX DNA-seq Dualindex'
         trimGaloreChannel : params.TRIM_FASTQ
         noTrimChannel : true
     }
