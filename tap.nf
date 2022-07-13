@@ -2,33 +2,10 @@
 
 nextflow.enable.dsl = 2
 
-include { trimGalore; tagtrim } from './processes/trimming'
-include { prependSingleUMI as prependTagGalore; prependSingleUMI as prependNotTrimmed; prependDoubleUMI as prependTagTrim } from './processes/fastq'
+include { trimGaloreWF as trimGalore; tagtrimWF as tagtrim; noTrimWF as notrim } from './pipelines/trimming'
 include { bwamem_pe } from './pipelines/bwamem_pe'
+include { connorWF as connor } from './pipelines/connor'
 include { picard_sortsam } from './processes/picard'
-
-process connor
-{
-    time '1h'
-
-    input:
-        tuple val(sampleId), path(bam), path(bamIndex)
-
-    output:
-        tuple val(sampleId), path(connorFile)
-
-    shell:
-        connorFile = "${sampleId}.connor.bam"
-
-        """
-        connor -v --force \
-            -s ${params.CONNOR_MIN_FAMILY_SIZE_THRESHOLD} \
-            -f ${params.CONNOR_CONSENSUS_FREQ_THRESHOLD} \
-            --umt_length ${params.CONNOR_UMT_LENGTH} \
-            "!{bam}" \
-            "!{connorFile}"
-        """
-}
 
 /*
  * Main work flow.
@@ -51,51 +28,18 @@ workflow
 
     trimOut = fastqChannel.branch
     {
-        tagtrimChannel : it[1] == 'ThruPLEX DNA-seq Dualindex'
-        trimGaloreChannel : params.TRIM_FASTQ
-        noTrimChannel : true
+        tagtrim : it[1] == 'ThruPLEX DNA-seq Dualindex'
+        trimGalore : params.TRIM_FASTQ
+        noTrim : true
     }
 
-    galoreTrimmed = trimGalore(trimOut.trimGaloreChannel.map { s, t, r1, r2, rU -> tuple s, r1, r2, rU })
-    galorePrepended = galoreTrimmed.branch
-    {
-        connorChannel : params.CONNOR_COLLAPSING
-        noConnorChannel : true
-    }
-    prependTagGalore(galorePrepended.connorChannel)
-    galoreOut = prependTagGalore.out.mix(galorePrepended.noConnorChannel.map { s, r1, r2, rU -> tuple s, r1, r2 })
+    galoreTrimmedChannel = trimGalore(trimOut.trimGalore)
 
-    tagtrimTrimmed = tagtrim(trimOut.tagtrimChannel.map { s, t, r1, r2, rU -> tuple s, r1, r2 })
-    tagtrimPrepended = tagtrimTrimmed.branch
-    {
-        connorChannel : params.CONNOR_COLLAPSING
-        noConnorChannel : true
-    }
-    prependTagTrim(tagtrimPrepended.connorChannel)
-    tagtrimOut = prependTagTrim.out.mix(tagtrimPrepended.noConnorChannel.map { s, r1, r2, rU1, rU2 -> tuple s, r1, r2 })
+    tagtrimTrimmedChannel = tagtrim(trimOut.tagtrim)
 
-    noTrimChannel = trimOut.noTrimChannel.map { s, t, r1, r2, rU -> tuple s, r1, r2, rU }
-    noTrimPrepended = noTrimChannel.branch
-    {
-        connorChannel : params.CONNOR_COLLAPSING
-        noConnorChannel : true
-    }
-    prependNotTrimmed(noTrimPrepended.connorChannel)
-    noTrimOut = prependNotTrimmed.out.mix(noTrimPrepended.noConnorChannel.map { s, r1, r2, rU -> tuple s, r1, r2 })
+    noTrimChannel = notrim(trimOut.noTrim)
 
-    afterTrimming = noTrimOut.mix(galoreOut).mix(tagtrimOut)
+    afterTrimming = noTrimChannel.mix(galoreTrimmedChannel).mix(tagtrimTrimmedChannel)
 
-    bwamem_pe(afterTrimming, csvChannel)
-
-    alignOut = bwamem_pe.out.branch
-    {
-        connorChannel : params.CONNOR_COLLAPSING
-        noConnorChannel : true
-    }
-
-    connor(alignOut.connorChannel)
-
-    collapsedChannel = alignOut.noConnorChannel.mix(connor.out)
-
-    picard_sortsam(collapsedChannel)
+    bwamem_pe(afterTrimming, csvChannel) | connor | picard_sortsam
 }
