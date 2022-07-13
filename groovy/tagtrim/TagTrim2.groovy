@@ -3,6 +3,7 @@
     @Grab("info.picocli:picocli:4.6.3"),
     @GrabExclude("commons-logging#commons-logging"),
     @Grab("org.slf4j:slf4j-api:1.7.36"),
+    @Grab("org.slf4j:jcl-over-slf4j:1.7.36"),
     @Grab("org.apache.logging.log4j:log4j-slf4j-impl:2.17.2")
 ])
 

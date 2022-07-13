@@ -57,14 +57,45 @@ workflow
     }
 
     galoreTrimmed = trimGalore(trimOut.trimGaloreChannel.map { s, t, r1, r2, rU -> tuple s, r1, r2, rU })
-    galorePrepended = prependTagGalore(galoreTrimmed)
+    galorePrepended = galoreTrimmed.branch
+    {
+        connorChannel : params.CONNOR_COLLAPSING
+        noConnorChannel : true
+    }
+    prependTagGalore(galorePrepended.connorChannel)
+    galoreOut = prependTagGalore.out.mix(galorePrepended.noConnorChannel.map { s, r1, r2, rU -> tuple s, r1, r2 })
 
     tagtrimTrimmed = tagtrim(trimOut.tagtrimChannel.map { s, t, r1, r2, rU -> tuple s, r1, r2 })
-    tagtrimPrepended = prependTagTrim(tagtrimTrimmed)
+    tagtrimPrepended = tagtrimTrimmed.branch
+    {
+        connorChannel : params.CONNOR_COLLAPSING
+        noConnorChannel : true
+    }
+    prependTagTrim(tagtrimPrepended.connorChannel)
+    tagtrimOut = prependTagTrim.out.mix(tagtrimPrepended.noConnorChannel.map { s, r1, r2, rU1, rU2 -> tuple s, r1, r2 })
 
-    notrimPrepended = prependNotTrimmed(trimOut.noTrimChannel.map { s, t, r1, r2, rU -> tuple s, r1, r2, rU })
+    noTrimChannel = trimOut.noTrimChannel.map { s, t, r1, r2, rU -> tuple s, r1, r2, rU }
+    noTrimPrepended = noTrimChannel.branch
+    {
+        connorChannel : params.CONNOR_COLLAPSING
+        noConnorChannel : true
+    }
+    prependNotTrimmed(noTrimPrepended.connorChannel)
+    noTrimOut = prependNotTrimmed.out.mix(noTrimPrepended.noConnorChannel.map { s, r1, r2, rU -> tuple s, r1, r2 })
 
-    afterTrimming = notrimPrepended.mix(galorePrepended).mix(tagtrimPrepended)
+    afterTrimming = noTrimOut.mix(galoreOut).mix(tagtrimOut)
 
-    bwamem_pe(afterTrimming, csvChannel) | connor | picard_sortsam
+    bwamem_pe(afterTrimming, csvChannel)
+
+    alignOut = bwamem_pe.out.branch
+    {
+        connorChannel : params.CONNOR_COLLAPSING
+        noConnorChannel : true
+    }
+
+    connor(alignOut.connorChannel)
+
+    collapsedChannel = alignOut.noConnorChannel.mix(connor.out)
+
+    picard_sortsam(collapsedChannel)
 }

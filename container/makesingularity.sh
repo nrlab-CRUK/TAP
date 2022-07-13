@@ -1,20 +1,7 @@
 #!/bin/sh
 
-if [[ -d spython ]]
-then
-    source spython/bin/activate
-else
-    python3 -m venv spython
-    source spython/bin/activate
-    pip install spython
-fi
-
-spython recipe Dockerfile > singularity_spec.txt
-
 sudo rm -rf nrlabtap_sandbox nrlabtap.sif
-#sudo singularity build --sandbox nrlabtap_sandbox singularity_spec.txt
-#sudo singularity build nrlabtap.sif singularity_spec.txt
 
 # See https://stackoverflow.com/a/60316979
-# sudo singularity build my_container.sif docker-daemon://local/my_container
+#sudo singularity build --sandbox nrlabtap_sandbox docker-daemon://nrlabcruk/nrlabtap:latest
 sudo singularity build nrlabtap.sif docker-daemon://nrlabcruk/nrlabtap:latest
