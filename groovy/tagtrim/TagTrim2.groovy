@@ -2,9 +2,8 @@
     @Grab("com.github.samtools:htsjdk:2.24.1"),
     @Grab("info.picocli:picocli:4.6.3"),
     @GrabExclude("commons-logging#commons-logging"),
-    @Grab("org.slf4j:slf4j-api:1.7.36"),
-    @Grab("org.slf4j:jcl-over-slf4j:1.7.36"),
-    @Grab("org.apache.logging.log4j:log4j-slf4j-impl:2.17.2")
+    @Grab("org.apache.logging.log4j:log4j-api:2.17.2"),
+    @Grab("org.apache.logging.log4j:log4j-core:2.17.2")
 ])
 
 import java.util.concurrent.Callable
@@ -13,6 +12,8 @@ import htsjdk.samtools.fastq.FastqReader
 import htsjdk.samtools.fastq.FastqRecord
 import htsjdk.samtools.fastq.FastqWriter
 import htsjdk.samtools.fastq.FastqWriterFactory
+import org.apache.logging.log4j.Logger
+import org.apache.logging.log4j.core.LoggerContext
 import picocli.CommandLine.Command
 import picocli.CommandLine.ExitCode
 import picocli.CommandLine.Option
@@ -55,6 +56,8 @@ public class TagTrim2 implements Callable<Integer>
     static final int STEM_LENGTH = STEM.length()
     private static final int ADDITIONAL_BASES = 3
 
+    private Logger logger = LoggerContext.context.getLogger(TagTrim2.class.name)
+    
     private Set stems = []
     
     private Timing reading = new Timing()
@@ -85,7 +88,7 @@ public class TagTrim2 implements Callable<Integer>
     public TagTrim2()
     {
         writerFactory = new FastqWriterFactory()
-        writerFactory.useAsyncIo = false
+        writerFactory.useAsyncIo = true
         writerFactory.createMd5 = false
 
         stems << STEM
@@ -158,14 +161,12 @@ public class TagTrim2 implements Callable<Integer>
                 continue
             }
 
-            /*
-            if (logger.isDebugEnabled())
+            if (logger.debugEnabled)
             {
                 logger.debug("In {}, found {} as {} in r1 and as {} in r2", getReadId(r1),
                         STEM, b1.substring(UMI_LENGTH, insert1Start),
                         b2.substring(UMI_LENGTH, insert2Start))
             }
-            */
 
             // See if we can find the reverse stem.
 
@@ -206,9 +207,9 @@ public class TagTrim2 implements Callable<Integer>
             writing.end()
         }
         
-        System.err.println("Mean reading time: ${reading} ns")
-        System.err.println("Mean processing time: ${processing} ns")
-        System.err.println("Mean writing time: ${writing} ns")
+        logger.info("Mean reading time: ${reading} ns")
+        logger.info("Mean processing time: ${processing} ns")
+        logger.info("Mean writing time: ${writing} ns")
     }
 
     private String getReadId(FastqRecord r)
