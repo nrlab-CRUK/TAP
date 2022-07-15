@@ -11,7 +11,8 @@ import java.util.concurrent.Callable
 import htsjdk.samtools.fastq.FastqReader
 import htsjdk.samtools.fastq.FastqRecord
 import htsjdk.samtools.fastq.FastqWriter
-import htsjdk.samtools.fastq.FastqWriterFactory
+import htsjdk.samtools.fastq.AsyncFastqWriter
+import htsjdk.samtools.fastq.BasicFastqWriter
 import org.apache.logging.log4j.Logger
 import org.apache.logging.log4j.core.LoggerContext
 import picocli.CommandLine.Command
@@ -54,7 +55,7 @@ public class TagTrim2 implements Callable<Integer>
 
     static final int UMI_LENGTH = 6
     static final int STEM_LENGTH = STEM.length()
-    private static final int ADDITIONAL_BASES = 3
+    static final int ADDITIONAL_BASES = 3
 
     private Logger logger = LoggerContext.context.getLogger(TagTrim2.class.name)
     
@@ -82,15 +83,8 @@ public class TagTrim2 implements Callable<Integer>
     @Option(names = "--umi2", required = true, description = "UMI two FASTQ file (output).")
     File umi2Out
 
-
-    private FastqWriterFactory writerFactory
-
     public TagTrim2()
     {
-        writerFactory = new FastqWriterFactory()
-        writerFactory.useAsyncIo = true
-        writerFactory.createMd5 = false
-
         stems << STEM
         stems << "A${STEM}".toString()
         stems << "CA${STEM}".toString()
@@ -108,19 +102,19 @@ public class TagTrim2 implements Callable<Integer>
             {
                 reader2 ->
 
-                writerFactory.newWriter(read1Out).withCloseable
+                newWriter(read1Out).withCloseable
                 {
                     writer1 ->
                     
-                    writerFactory.newWriter(read2Out).withCloseable
+                    newWriter(read2Out).withCloseable
                     {
                         writer2 ->
                         
-                        writerFactory.newWriter(umi1Out).withCloseable
+                        newWriter(umi1Out).withCloseable
                         {
                             writerU1 ->
                             
-                            writerFactory.newWriter(umi2Out).withCloseable
+                            newWriter(umi2Out).withCloseable
                             {
                                 writerU2 ->
                                 
@@ -134,6 +128,13 @@ public class TagTrim2 implements Callable<Integer>
         return ExitCode.OK
     }
 
+    private FastqWriter newWriter(file)
+    {
+        int bufferSize = 0x4000
+        def basic = new BasicFastqWriter(file)
+        return new AsyncFastqWriter(basic, bufferSize)
+    }
+    
     void doTrimming(FastqReader reader1, FastqReader reader2, FastqWriter writer1, FastqWriter writer2, FastqWriter writerU1, FastqWriter writerU2)
     {
         while (reader1.hasNext() && reader2.hasNext())

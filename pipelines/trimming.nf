@@ -29,7 +29,7 @@ process trimGalore
 
 process tagtrim
 {
-    cpus   1
+    cpus   5
     memory '256M'
 
     input:
