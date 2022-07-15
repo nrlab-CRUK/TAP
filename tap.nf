@@ -1,5 +1,7 @@
 #!/usr/bin/env nextflow
 
+import groovy.grape.Grape
+
 nextflow.enable.dsl = 2
 
 include { trimGaloreWF as trimGalore; tagtrimWF as tagtrim; noTrimWF as notrim } from './pipelines/trimming'
@@ -7,11 +9,27 @@ include { bwamem_pe } from './pipelines/bwamem_pe'
 include { connorWF as connor } from './pipelines/connor'
 include { picard_sortsam } from './processes/picard'
 
+// Grab the necessary grapes for Groovy here, so make sure they are available
+// before the pipeline starts and multiple processes try to get them.
+def grabGrapes()
+{
+    def classLoader = nextflow.Nextflow.classLoader
+    
+    Grape.grab([group:'com.github.samtools', artifact:'htsjdk', version:'2.24.1', classLoader: classLoader])
+    Grape.grab([group:'info.picocli', artifact:'picocli', version:'4.6.3', classLoader: classLoader])
+    Grape.grab([group:'org.apache.logging.log4j', artifact:'log4j-api', version:'2.17.2', classLoader: classLoader])
+    Grape.grab([group:'org.apache.logging.log4j', artifact:'log4j-core', version:'2.17.2', classLoader: classLoader])
+    
+    log.debug("Groovy dependencies fetched.")
+}
+
 /*
  * Main work flow.
  */
 workflow
 {
+    grabGrapes()
+    
     csvChannel =
         channel.fromPath("alignment.csv")
             .splitCsv(header: true, quote: '"')
