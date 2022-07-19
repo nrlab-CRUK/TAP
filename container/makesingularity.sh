@@ -1,7 +1,13 @@
 #!/bin/sh
 
+# Builds a Singularity image from the Docker image.
+# Use makedocker.sh first.
+# See https://stackoverflow.com/a/60316979
+
+TAG="latest"
+REPO="nrlabcruk/invar2:$TAG"
+
 sudo rm -rf nrlabtap_sandbox nrlabtap.sif
 
-# See https://stackoverflow.com/a/60316979
-#sudo singularity build --sandbox nrlabtap_sandbox docker-daemon://nrlabcruk/nrlabtap:latest
-sudo singularity build nrlabtap.sif docker-daemon://nrlabcruk/nrlabtap:latest
+#sudo singularity build --sandbox nrlabtap_sandbox docker-daemon://${REPO}
+sudo singularity build nrlabtap.sif docker-daemon://${REPO}

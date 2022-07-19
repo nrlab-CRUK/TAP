@@ -6,6 +6,7 @@ channels:
 dependencies:
   - bioconda::bwa-mem2=2.2.1
   - bioconda::connor=0.6.1
+  - bioconda::gatk=3.8
   - bioconda::picard=2.26.10-0
   - bioconda::samtools=1.14
   - bioconda::seqkit=0.13.2

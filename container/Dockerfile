@@ -3,7 +3,7 @@ FROM rockylinux:latest
 RUN dnf install -y dnf-plugins-core epel-release && \
     dnf makecache && \
     dnf update -y && \
-    dnf install -y curl gcc git htslib-devel java-11-openjdk-devel procps unzip wget && \
+    dnf install -y curl gcc git htslib-devel java-11-openjdk-headless java-1.8.0-openjdk-headless procps unzip wget && \
     dnf clean all
 
 # Fastq splitter

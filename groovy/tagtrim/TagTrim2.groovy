@@ -130,9 +130,8 @@ public class TagTrim2 implements Callable<Integer>
 
     private FastqWriter newWriter(file)
     {
-        int bufferSize = 0x4000
         def basic = new BasicFastqWriter(file)
-        return new AsyncFastqWriter(basic, bufferSize)
+        return new AsyncFastqWriter(basic, 0x4000)
     }
     
     void doTrimming(FastqReader reader1, FastqReader reader2, FastqWriter writer1, FastqWriter writer2, FastqWriter writerU1, FastqWriter writerU2)

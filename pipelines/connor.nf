@@ -3,7 +3,7 @@ process connor
     time '1h'
 
     input:
-        tuple val(sampleId), path(bam), path(bamIndex)
+        tuple val(sampleId), path(bam)
 
     output:
         tuple val(sampleId), path(connorFile)
@@ -35,7 +35,7 @@ workflow connorWF
 
         connor(decision.connor)
 
-        collapsedChannel = decision.noConnor.mix(connor.out)
+        collapsedChannel = connor.out.mix(decision.noConnor.map { s, b, i -> tuple s, b })
 
     emit:
         collapsedChannel

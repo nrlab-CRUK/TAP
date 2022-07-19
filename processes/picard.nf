@@ -202,3 +202,23 @@ process picard_sortsam
         template "picard/SortSam.sh"
 }
 
+/*
+ * Create an index for a BAM file.
+ */
+process picard_buildbamindex
+{
+    label "picard"
+
+    input:
+        tuple val(sampleId), path(inBam)
+
+    output:
+        tuple val(sampleId), path(inBam), path(outBai)
+
+    shell:
+        outBai = "${inBam.baseName}.bai"
+        javaMem = javaMemMB(task)
+        readsInRam = maxReadsInRam(javaMem, 100)
+
+        template "picard/BuildBamIndex.sh"
+}
