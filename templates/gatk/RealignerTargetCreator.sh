@@ -10,6 +10,6 @@ set -e
     -T RealignerTargetCreator \
     -R "!{fastaFile}" \
     -I "!{inBam}" \
-    !{knownSites.collect { "--known \"" + it + "\" " }.join()} \
+    !{knownSites.collect { "-known \"" + it + "\" " }.join()} \
     -log .command.log \
     -o "!{intervalsFile}"

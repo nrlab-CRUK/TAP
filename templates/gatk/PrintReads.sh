@@ -7,11 +7,9 @@ set -e
 !{params.JAVA8} \
     -Xms!{javaMem}m -Xmx!{javaMem}m \
     -jar "!{params.GATK_JAR}" \
-    -T BaseRecalibrator \
+    -T PrintReads \
     -R "!{fastaFile}" \
     -I "!{inBam}" \
-    !{params.GATK_DBSNP ? '-knownSites "' + params.GATK_DBSNP + '"' : ''} \
-    -knownSites "!{intervalsFile}" \
+    -BQSR "!{inTable}" \
     -log .command.log \
-    !{params.GATK_USE_INDEL_QUALITIES ? '' : "--disable_indel_quals"} \
     -o "!{outBam}"

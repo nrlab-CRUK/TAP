@@ -16,7 +16,7 @@ process createRealignerTargets
         javaMem = javaMemMB(task)
         intervalsFile = "${sampleId}.intervals"
     
-        template "gatk/realignerTargetCreator.sh"
+        template "gatk/RealignerTargetCreator.sh"
 }
 
 process indelRealign
@@ -35,7 +35,7 @@ process indelRealign
         outBam = "${sampleId}.indelrealign.bam"
         outBai = "${sampleId}.indelrealign.bai"
         
-        template "gatk/indelRealign.sh"
+        template "gatk/IndelRealigner.sh"
 }
 
 process baseCallRecalibrate
@@ -47,6 +47,24 @@ process baseCallRecalibrate
         val(fastaFile)
         
     output:
+        tuple val(sampleId), path(inBam), path(inBai), path(tableFile)
+
+    shell:
+        javaMem = javaMemMB(task)
+        tableFile = "${sampleId}.recalibrated.table"
+        
+        template "gatk/BaseRecalibrator.sh"
+}
+
+process recalibrateReads
+{
+    label 'gatk'
+    
+    input:
+        tuple val(sampleId), path(inBam), path(inBai), path(tableFile)
+        val(fastaFile)
+        
+    output:
         tuple val(sampleId), path(outBam), path(outBai)
 
     shell:
@@ -54,7 +72,7 @@ process baseCallRecalibrate
         outBam = "${sampleId}.recalibrated.bam"
         outBai = "${sampleId}.recalibrated.bai"
         
-        template "gatk/recalibrateBaseCalls.sh"
+        template "gatk/PrintReads.sh"
 }
 
 workflow gatk
@@ -77,7 +95,8 @@ workflow gatk
         createRealignerTargets(alignedChannel, fastaChannel, knownSitesChannel)
         indelRealign(createRealignerTargets.out, fastaChannel)
         baseCallRecalibrate(indelRealign.out, fastaChannel)
-    
+        recalibrateReads(baseCallRecalibrate.out, fastaChannel)
+        
         // recalibraatedChannel = decision.asIs.mix(baseCallRecalibrate.out)
     
     emit:

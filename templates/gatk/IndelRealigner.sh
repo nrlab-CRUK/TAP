@@ -11,6 +11,7 @@ set -e
     -R "!{fastaFile}" \
     -I "!{inBam}" \
     -targetIntervals "!{intervalsFile}" \
+    -model USE_READS \
     -log .command.log \
     --filter_bases_not_stored \
     -o "!{outBam}"
