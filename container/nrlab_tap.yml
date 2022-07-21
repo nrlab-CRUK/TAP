@@ -4,6 +4,7 @@ channels:
   - bioconda
   - defaults
 dependencies:
+  - bioconda::bedtools=2.30.0
   - bioconda::bwa-mem2=2.2.1
   - bioconda::connor=0.6.1
   - bioconda::gatk=3.8

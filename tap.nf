@@ -9,15 +9,17 @@ include { bwamem_pe } from './pipelines/bwamem_pe'
 include { connorWF as connor } from './pipelines/connor'
 include { picard_sortsam } from './processes/picard'
 include { gatk } from './pipelines/gatk'
+include { filtering } from './pipelines/filtering'
 
 // Grab the necessary grapes for Groovy here, so make sure they are available
 // before the pipeline starts and multiple processes try to get them.
 def grabGrapes()
 {
     log.debug("Fetching Groovy dependencies.")
-    
+
     def classLoader = nextflow.Nextflow.classLoader
-    
+
+    Grape.grab([group:'org.apache.commons', artifact:'commons-lang3', version:'3.12.0', noExceptions:true, classLoader: classLoader])
     Grape.grab([group:'com.github.samtools', artifact:'htsjdk', version:'2.24.1', noExceptions:true, classLoader: classLoader])
     Grape.grab([group:'info.picocli', artifact:'picocli', version:'4.6.3', classLoader: classLoader])
     Grape.grab([group:'org.apache.logging.log4j', artifact:'log4j-api', version:'2.17.2', classLoader: classLoader])
@@ -30,7 +32,7 @@ def grabGrapes()
 workflow
 {
     grabGrapes()
-    
+
     csvChannel =
         channel.fromPath("alignment.csv")
             .splitCsv(header: true, quote: '"')
@@ -61,6 +63,8 @@ workflow
     afterTrimming = noTrimChannel.mix(galoreTrimmedChannel).mix(tagtrimTrimmedChannel)
 
     bwamem_pe(afterTrimming, csvChannel) | connor | picard_sortsam
-    
-    gatk(picard_sortsam.out)
+
+    // gatk(picard_sortsam.out)
+
+    filtering(picard_sortsam.out)
 }
