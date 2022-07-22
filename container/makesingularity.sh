@@ -5,7 +5,7 @@
 # See https://stackoverflow.com/a/60316979
 
 TAG="latest"
-REPO="nrlabcruk/invar2:$TAG"
+REPO="nrlabcruk/nrlabtap:$TAG"
 
 sudo rm -rf nrlabtap_sandbox nrlabtap.sif
 

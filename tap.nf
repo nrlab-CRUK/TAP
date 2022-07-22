@@ -1,8 +1,9 @@
 #!/usr/bin/env nextflow
 
-import groovy.grape.Grape
-
 nextflow.enable.dsl = 2
+
+include { grabGrapes } from './functions/initialisation'
+include { getExperimentType } from './functions/databaseAdditions'
 
 include { trimGaloreWF as trimGalore; tagtrimWF as tagtrim; noTrimWF as notrim } from './pipelines/trimming'
 include { bwamem_pe } from './pipelines/bwamem_pe'
@@ -10,21 +11,6 @@ include { connorWF as connor } from './pipelines/connor'
 include { picard_sortsam } from './processes/picard'
 include { gatk } from './pipelines/gatk'
 include { filtering } from './pipelines/filtering'
-
-// Grab the necessary grapes for Groovy here, so make sure they are available
-// before the pipeline starts and multiple processes try to get them.
-def grabGrapes()
-{
-    log.debug("Fetching Groovy dependencies.")
-
-    def classLoader = nextflow.Nextflow.classLoader
-
-    Grape.grab([group:'org.apache.commons', artifact:'commons-lang3', version:'3.12.0', noExceptions:true, classLoader: classLoader])
-    Grape.grab([group:'com.github.samtools', artifact:'htsjdk', version:'2.24.1', noExceptions:true, classLoader: classLoader])
-    Grape.grab([group:'info.picocli', artifact:'picocli', version:'4.6.3', classLoader: classLoader])
-    Grape.grab([group:'org.apache.logging.log4j', artifact:'log4j-api', version:'2.17.2', classLoader: classLoader])
-    Grape.grab([group:'org.apache.logging.log4j', artifact:'log4j-core', version:'2.17.2', classLoader: classLoader])
-}
 
 /*
  * Main work flow.

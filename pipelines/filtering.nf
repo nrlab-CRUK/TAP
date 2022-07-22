@@ -40,13 +40,23 @@ workflow filtering
         alignmentChannel
 
     main:
-        blacklistChannel = channel.fromPath(params.BLACKLIST)
+        blacklistRefChannel = params.BLACKLIST ? channel.fromPath(params.BLACKLIST) : channel.empty
 
         noIndexAlignmentChannel = alignmentChannel.map { s, b, i -> tuple s, b }
 
         filterReads(noIndexAlignmentChannel)
-        filterBlacklist(filterReads.out, blacklistChannel)
-        picard_buildbamindex(filterBlacklist.out)
+
+        blacklistOrNo = filterReads.out.branch
+        {
+            blacklist : params.BLACKLIST
+            no : true
+        }
+
+        filterBlacklist(blacklistOrNo.blacklist, blacklistRefChannel)
+
+        afterBlacklisting = blacklistOrNo.no.mix(filterBlacklist.out)
+
+        picard_buildbamindex(afterBlacklisting)
 
     emit:
         picard_buildbamindex.out
