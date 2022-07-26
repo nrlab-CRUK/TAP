@@ -6,10 +6,10 @@ include { extractChunkNumber; splitFastq as splitFastq1; splitFastq as splitFast
 include { picard_addreadgroups; picard_fixmate; picard_merge_or_markduplicates } from "../processes/picard"
 
 /*
- * Align with BWAmem (single read or paired end).
+ * Align with BWAmem2 (single read or paired end).
  * Needs a list of one or two FASTQ files for alignment in each tuple.
  */
-process bwa_mem
+process bwamem2
 {
     cpus 4
     memory { 8.GB * task.attempt }
@@ -30,7 +30,7 @@ process bwa_mem
 }
 
 
-workflow bwamem_pe
+workflow alignment
 {
     take:
         fastqChannel
@@ -111,11 +111,11 @@ workflow bwamem_pe
             }
             .combine(bwamem2IndexChannel)
 
-        bwa_mem(combinedChunkChannel)
+        bwamem2(combinedChunkChannel)
 
         // Add sequencing info back to the channel for read groups.
         // It is available from sequencing_info_channel, the rows from the CSV file.
-        readGroupsChannel = bwa_mem.out
+        readGroupsChannel = bwamem2.out
             .combine(csvChannel.map { tuple it.PlatformUnit, it }, by: 0)
 
         picard_addreadgroups(readGroupsChannel)

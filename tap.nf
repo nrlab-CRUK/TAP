@@ -6,7 +6,7 @@ include { grabGrapes } from './functions/initialisation'
 include { getExperimentType } from './functions/databaseAdditions'
 
 include { trimGaloreWF as trimGalore; tagtrimWF as tagtrim; noTrimWF as notrim } from './pipelines/trimming'
-include { bwamem_pe } from './pipelines/bwamem_pe'
+include { alignment } from './pipelines/alignment'
 include { exome } from './pipelines/exome'
 include { sWGS } from './pipelines/swgs'
 
@@ -99,11 +99,11 @@ workflow
 
     afterTrimming = noTrimChannel.mix(galoreTrimmedChannel).mix(tagtrimTrimmedChannel)
 
-    bwamem_pe(afterTrimming, csvChannel)
+    alignment(afterTrimming, csvChannel)
     
     // Get the information back into the channel
     
-    alignedWithInfoChannel = bwamem_pe.out.combine(sampleInfoChannel, by: 0)
+    alignedWithInfoChannel = alignment.out.combine(sampleInfoChannel, by: 0)
     
     typeChannel = alignedWithInfoChannel.branch
     {
