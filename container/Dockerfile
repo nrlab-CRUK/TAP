@@ -3,7 +3,7 @@ FROM rockylinux:latest
 RUN dnf install -y dnf-plugins-core epel-release && \
     dnf makecache && \
     dnf update -y && \
-    dnf install -y curl gcc git htslib-devel java-17-openjdk-headless java-1.8.0-openjdk-headless procps unzip wget && \
+    dnf install -y curl gcc git htslib-devel java-17-openjdk java-1.8.0-openjdk procps unzip wget && \
     dnf clean all
 
 # Fastq splitter
@@ -41,5 +41,5 @@ RUN /opt/conda/bin/conda env create -f nrlab_tap.yml
 
 RUN /opt/conda/bin/conda clean -a
 
-ENV JAVA_HOME /usr/lib/jvm/java-17
+ENV JAVA_HOME /usr/lib/jvm/jre-17
 ENV PATH /opt/groovy-${GROOVY_VERSION}/bin:${JAVA_HOME}/bin:/opt/conda/envs/nrlab_tap/bin:$PATH

@@ -7,10 +7,51 @@ include { getExperimentType } from './functions/databaseAdditions'
 
 include { trimGaloreWF as trimGalore; tagtrimWF as tagtrim; noTrimWF as notrim } from './pipelines/trimming'
 include { bwamem_pe } from './pipelines/bwamem_pe'
-include { connorWF as connor } from './pipelines/connor'
-include { picard_sortsam } from './processes/picard'
-include { gatk } from './pipelines/gatk'
-include { filtering } from './pipelines/filtering'
+include { exome } from './pipelines/exome'
+include { sWGS } from './pipelines/swgs'
+
+
+def isExome(info)
+{
+    def exome = info.ExperimentType in ['exome', 'exome_Sequencing']
+    // log.warn("${info.PlatformUnit} type is ${info.ExperimentType} - isExome = ${exome}")
+    return exome
+}
+
+def isWGS(info)
+{
+    def wgs = info.ExperimentType in ['sWGS', 'WGS']
+    // log.warn("${info.PlatformUnit} type is ${info.ExperimentType} - isWGS = ${wgs}")
+    return wgs
+}
+
+process readyToPublish
+{
+    executor 'local'
+    memory   '1m'
+    time     '2m'
+    
+    stageInMode 'link'
+    publishDir "${launchDir}/processed", mode: 'link'
+    
+    input:
+        tuple val(sampleId), path(bamFile), path(bamIndex)
+        
+    output:
+        tuple val(sampleId), path(finalBam), path(finalIndex)
+        
+    shell:
+        finalBam = "${sampleId}.bam"
+        finalIndex = "${sampleId}.bai"
+        
+        """
+            if [ "!{bamFile}" != "!{finalBam}" ]
+            then
+                ln "!{bamFile}" "!{finalBam}"
+                ln "!{bamIndex}" "!{finalIndex}"
+            fi
+        """
+}       
 
 /*
  * Main work flow.
@@ -32,6 +73,16 @@ workflow
                       file("${params.FASTQ_DIR}/${row.Read2}", checkIfExists: true),
                       row.UmiRead ? file("${params.FASTQ_DIR}/${row.UmiRead}", checkIfExists: true) : null
             }
+            
+    sampleInfoChannel = csvChannel
+            .map {
+                row ->
+                
+                // Add database fields
+                row['ExperimentType'] = getExperimentType(row.SLXId)
+                
+                tuple row.PlatformUnit, row
+            }
 
     trimOut = fastqChannel.branch
     {
@@ -48,9 +99,24 @@ workflow
 
     afterTrimming = noTrimChannel.mix(galoreTrimmedChannel).mix(tagtrimTrimmedChannel)
 
-    bwamem_pe(afterTrimming, csvChannel) | connor | picard_sortsam
-
-    // gatk(picard_sortsam.out)
-
-    filtering(picard_sortsam.out)
+    bwamem_pe(afterTrimming, csvChannel)
+    
+    // Get the information back into the channel
+    
+    alignedWithInfoChannel = bwamem_pe.out.combine(sampleInfoChannel, by: 0)
+    
+    typeChannel = alignedWithInfoChannel.branch
+    {
+        exome: isExome(it[3])
+        sWGS:  isWGS(it[3])
+        other: true
+    }
+    
+    exome(typeChannel.exome.map { s, b, i, info -> tuple s, b, i })
+    
+    sWGS(typeChannel.sWGS.map { s, b, i, info -> tuple s, b, i }, sampleInfoChannel)
+    
+    finalChannel = exome.out.mix(sWGS.out).mix(typeChannel.other.map { s, b, i, info -> tuple s, b, i })
+    
+    readyToPublish(finalChannel)
 }

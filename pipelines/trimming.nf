@@ -129,7 +129,7 @@ workflow tagtrimWF
         }
         prependDoubleUMI(prepended.connor)
 
-        noConnorChannel = prepended.noConnor.map { s, r1, r2, rU -> tuple s, r1, r2 }
+        noConnorChannel = prepended.noConnor.map { s, r1, r2, u1, u2 -> tuple s, r1, r2 }
 
         trimmedChannel = prependDoubleUMI.out.mix(noConnorChannel)
 
