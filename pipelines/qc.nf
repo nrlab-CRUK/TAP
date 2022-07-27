@@ -1,28 +1,24 @@
-#!/usr/bin/env nextflow
-
-include { picard_sortsam } from '../processes/picard'
-include { filtering } from './filtering'
-
 process fastqc
 {
     memory '300m'
     time   '4h'
     cpus   1
-    
-    publishDir "${launchDir}/reports", mode: 'link'
-    
+
+    publishDir "${launchDir}/reports", mode: 'link', pattern: '*.html'
+
     input:
         tuple val(sampleId), path(bamFile), path(bamIndex)
-    
+
     output:
-        path("${sampleId}_fastqc.html")
-        
+        tuple val(sampleId), path(bamFile), path(bamIndex), emit: bamChannel
+        path("${sampleId}_fastqc.html"), emit: reportChannel
+
     shell:
         canonicalBam = "${sampleId}.bam"
-        
+
         """
         mkdir temp
-        
+
         ln "!{bamFile}" "!{canonicalBam}"
 
         fastqc \
@@ -30,24 +26,27 @@ process fastqc
             --dir temp \
             --extract \
             "!{canonicalBam}"
-        
+
         rm -rf temp
         """
 }
 
-workflow sWGS
+workflow QC
 {
     take:
         alignmentChannel
-        sampleInfoChannel
-    
-    main:
-        // picard_sortsam(alignmentChannel)
 
-        filtering(alignmentChannel)
-        
-        fastqc(filtering.out)
-        
+    main:
+        decision = alignmentChannel.branch
+        {
+            fastqc: params.FASTQC
+            skip: true
+        }
+
+        fastqc(decision.fastqc)
+
+        afterQCChannel = decision.skip.mix(fastqc.out.bamChannel)
+
     emit:
-        filtering.out
+        afterQCChannel
 }

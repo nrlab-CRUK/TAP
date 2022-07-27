@@ -34,7 +34,7 @@ workflow alignment
 {
     take:
         fastqChannel
-        csvChannel
+        sampleInfoChannel
 
     main:
         bwamem2IndexPath = file(params.BWAMEM2_INDEX)
@@ -114,9 +114,8 @@ workflow alignment
         bwamem2(combinedChunkChannel)
 
         // Add sequencing info back to the channel for read groups.
-        // It is available from sequencing_info_channel, the rows from the CSV file.
-        readGroupsChannel = bwamem2.out
-            .combine(csvChannel.map { tuple it.PlatformUnit, it }, by: 0)
+        // It is available from sampleInfoChannel, the rows from the CSV file.
+        readGroupsChannel = bwamem2.out.combine(sampleInfoChannel, by: 0)
 
         picard_addreadgroups(readGroupsChannel)
         picard_fixmate(picard_addreadgroups.out)

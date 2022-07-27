@@ -78,28 +78,25 @@ process recalibrateReads
 workflow gatk
 {
     take:
-        alignedChannel
+        alignmentChannel
 
     main:
         fastaChannel = channel.of(params.REFERENCE_FASTA)
         knownSitesChannel = channel.of(params.GATK_KNOWN_SITES)
 
-        /*
-        decision = alignedChannel.branch
+        decision = alignmentChannel.branch
         {
-            recalibrate : params.CONNOR_COLLAPSING
+            gatk : params.GATK_REALIGNMENT
             asIs : true
         }
-        */
 
-        createRealignerTargets(alignedChannel, fastaChannel, knownSitesChannel)
+        createRealignerTargets(decision.gatk, fastaChannel, knownSitesChannel)
         indelRealign(createRealignerTargets.out, fastaChannel)
         baseCallRecalibrate(indelRealign.out, fastaChannel)
         recalibrateReads(baseCallRecalibrate.out, fastaChannel)
 
-        // recalibraatedChannel = decision.asIs.mix(baseCallRecalibrate.out)
+        recalibratedChannel = decision.asIs.mix(recalibrateReads.out)
 
     emit:
-        // recalibraatedChannel
-        baseCallRecalibrate.out
+        recalibratedChannel
 }

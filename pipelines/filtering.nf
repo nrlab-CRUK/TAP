@@ -3,7 +3,7 @@ include { picard_buildbamindex } from '../processes/picard'
 process filterReads
 {
     input:
-        tuple val(sampleId), path(inBam)
+        tuple val(sampleId), path(inBam), path(inBai)
 
     output:
         tuple val(sampleId), path(outBam)
@@ -42,9 +42,13 @@ workflow filtering
     main:
         blacklistRefChannel = params.BLACKLIST ? channel.fromPath(params.BLACKLIST) : channel.empty
 
-        noIndexAlignmentChannel = alignmentChannel.map { s, b, i -> tuple s, b }
+        decision = alignmentChannel.branch
+        {
+            filter: params.FILTER
+            asIs:   true
+        }
 
-        filterReads(noIndexAlignmentChannel)
+        filterReads(decision.filter)
 
         blacklistOrNo = filterReads.out.branch
         {
@@ -54,10 +58,12 @@ workflow filtering
 
         filterBlacklist(blacklistOrNo.blacklist, blacklistRefChannel)
 
-        afterBlacklisting = blacklistOrNo.no.mix(filterBlacklist.out)
+        afterBlacklistingChannel = blacklistOrNo.no.mix(filterBlacklist.out)
 
-        picard_buildbamindex(afterBlacklisting)
+        picard_buildbamindex(afterBlacklistingChannel)
+
+        afterFilteringChannel = decision.asIs.mix(picard_buildbamindex.out)
 
     emit:
-        picard_buildbamindex.out
+        afterFilteringChannel
 }

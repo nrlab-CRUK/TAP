@@ -5,10 +5,12 @@ nextflow.enable.dsl = 2
 include { grabGrapes } from './functions/initialisation'
 include { getExperimentType } from './functions/databaseAdditions'
 
-include { trimGaloreWF as trimGalore; tagtrimWF as tagtrim; noTrimWF as notrim } from './pipelines/trimming'
+include { trimming } from './pipelines/trimming'
+include { connorWF as connor } from './pipelines/connor'
 include { alignment } from './pipelines/alignment'
-include { exome } from './pipelines/exome'
-include { sWGS } from './pipelines/swgs'
+include { gatk } from './pipelines/gatk'
+include { filtering } from './pipelines/filtering'
+include { QC } from './pipelines/qc'
 
 
 def isExome(info)
@@ -25,25 +27,25 @@ def isWGS(info)
     return wgs
 }
 
-process readyToPublish
+process publish
 {
     executor 'local'
     memory   '1m'
     time     '2m'
-    
+
     stageInMode 'link'
     publishDir "${launchDir}/processed", mode: 'link'
-    
+
     input:
         tuple val(sampleId), path(bamFile), path(bamIndex)
-        
+
     output:
         tuple val(sampleId), path(finalBam), path(finalIndex)
-        
+
     shell:
         finalBam = "${sampleId}.bam"
         finalIndex = "${sampleId}.bai"
-        
+
         """
             if [ "!{bamFile}" != "!{finalBam}" ]
             then
@@ -51,7 +53,7 @@ process readyToPublish
                 ln "!{bamIndex}" "!{finalIndex}"
             fi
         """
-}       
+}
 
 /*
  * Main work flow.
@@ -68,55 +70,21 @@ workflow
             .map {
                 row ->
                 tuple row.PlatformUnit,
-                      row['Index Type'],
                       file("${params.FASTQ_DIR}/${row.Read1}", checkIfExists: true),
                       file("${params.FASTQ_DIR}/${row.Read2}", checkIfExists: true),
-                      row.UmiRead ? file("${params.FASTQ_DIR}/${row.UmiRead}", checkIfExists: true) : null
+                      row.UmiRead ? file("${params.FASTQ_DIR}/${row.UmiRead}", checkIfExists: true)
+                                  : file("${params.FASTQ_DIR}/__no_umi.fq.gz", checkIfExists: false)
             }
-            
+
     sampleInfoChannel = csvChannel
             .map {
                 row ->
-                
-                // Add database fields
-                row['ExperimentType'] = getExperimentType(row.SLXId)
-                
                 tuple row.PlatformUnit, row
             }
 
-    trimOut = fastqChannel.branch
-    {
-        tagtrim : it[1] == 'ThruPLEX DNA-seq Dualindex'
-        trimGalore : params.TRIM_FASTQ
-        noTrim : true
-    }
+    trimming(fastqChannel, sampleInfoChannel)
 
-    galoreTrimmedChannel = trimGalore(trimOut.trimGalore)
+    alignment(trimming.out, sampleInfoChannel) | connor | gatk | filtering | QC
 
-    tagtrimTrimmedChannel = tagtrim(trimOut.tagtrim)
-
-    noTrimChannel = notrim(trimOut.noTrim)
-
-    afterTrimming = noTrimChannel.mix(galoreTrimmedChannel).mix(tagtrimTrimmedChannel)
-
-    alignment(afterTrimming, csvChannel)
-    
-    // Get the information back into the channel
-    
-    alignedWithInfoChannel = alignment.out.combine(sampleInfoChannel, by: 0)
-    
-    typeChannel = alignedWithInfoChannel.branch
-    {
-        exome: isExome(it[3])
-        sWGS:  isWGS(it[3])
-        other: true
-    }
-    
-    exome(typeChannel.exome.map { s, b, i, info -> tuple s, b, i })
-    
-    sWGS(typeChannel.sWGS.map { s, b, i, info -> tuple s, b, i }, sampleInfoChannel)
-    
-    finalChannel = exome.out.mix(sWGS.out).mix(typeChannel.other.map { s, b, i, info -> tuple s, b, i })
-    
-    readyToPublish(finalChannel)
+    publish(QC.out)
 }

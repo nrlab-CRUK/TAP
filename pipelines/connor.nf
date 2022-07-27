@@ -1,9 +1,11 @@
+include { picard_buildbamindex } from '../processes/picard'
+
 process connor
 {
     time '1h'
 
     input:
-        tuple val(sampleId), path(bam)
+        tuple val(sampleId), path(bam), path(index)
 
     output:
         tuple val(sampleId), path(connorFile)
@@ -11,14 +13,7 @@ process connor
     shell:
         connorFile = "${sampleId}.connor.bam"
 
-        """
-        connor -v --force \
-            -s ${params.CONNOR_MIN_FAMILY_SIZE_THRESHOLD} \
-            -f ${params.CONNOR_CONSENSUS_FREQ_THRESHOLD} \
-            --umt_length ${params.CONNOR_UMT_LENGTH} \
-            "!{bam}" \
-            "!{connorFile}"
-        """
+        template "connor.sh"
 }
 
 workflow connorWF
@@ -33,9 +28,9 @@ workflow connorWF
             noConnor : true
         }
 
-        connor(decision.connor)
+        connor(decision.connor) | picard_buildbamindex
 
-        collapsedChannel = connor.out.mix(decision.noConnor.map { s, b, i -> tuple s, b })
+        collapsedChannel = decision.noConnor.mix(picard_buildbamindex.out)
 
     emit:
         collapsedChannel

@@ -16,7 +16,7 @@ process trimGalore
     memory '1G'
 
     input:
-        tuple val(sampleId), path(read1), path(read2), path(umiread)
+        tuple val(sampleId), path(read1), path(read2), path(umiread), val(info)
 
     output:
         tuple val(sampleId), path("${fileBase}_val_1.fq.gz"), path("${fileBase}_val_2.fq.gz"), path(umiread)
@@ -33,7 +33,7 @@ process tagtrim
     memory '256M'
 
     input:
-        tuple val(sampleId), path(read1In), path(read2In)
+        tuple val(sampleId), path(read1In), path(read2In), path(umiRead), val(info)
 
     output:
         tuple val(sampleId), path(read1Out), path(read2Out), path(umi1Out), path(umi2Out)
@@ -99,17 +99,19 @@ workflow trimGaloreWF
         fastqChannel
 
     main:
-        trimmed = trimGalore(fastqChannel.map { s, t, r1, r2, rU -> tuple s, r1, r2, rU })
+        trimmed = trimGalore(fastqChannel)
+
         prepended = trimmed.branch
         {
             connor : params.CONNOR_COLLAPSING
             noConnor : true
         }
+
         prependSingleUMI(prepended.connor)
 
         noConnorChannel = prepended.noConnor.map { s, r1, r2, rU -> tuple s, r1, r2 }
 
-        trimmedChannel = prependSingleUMI.out.mix(noConnorChannel)
+        trimmedChannel = noConnorChannel.mix(prependSingleUMI.out)
 
     emit:
         trimmedChannel
@@ -121,17 +123,19 @@ workflow tagtrimWF
         fastqChannel
 
     main:
-        trimmed = tagtrim(fastqChannel.map { s, t, r1, r2, rU -> tuple s, r1, r2 })
+        trimmed = tagtrim(fastqChannel)
+
         prepended = trimmed.branch
         {
             connor : params.CONNOR_COLLAPSING
             noConnor : true
         }
+
         prependDoubleUMI(prepended.connor)
 
         noConnorChannel = prepended.noConnor.map { s, r1, r2, u1, u2 -> tuple s, r1, r2 }
 
-        trimmedChannel = prependDoubleUMI.out.mix(noConnorChannel)
+        trimmedChannel = noConnorChannel.mix(prependDoubleUMI.out)
 
     emit:
         trimmedChannel
@@ -143,18 +147,46 @@ workflow noTrimWF
         fastqChannel
 
     main:
-        trimmed = fastqChannel.map { s, t, r1, r2, rU -> tuple s, r1, r2, rU }
-        prepended = trimmed.branch
+        withoutInfoChannel = fastqChannel.map { s, r1, r2, rU, info -> tuple s, r1, r2, rU }
+
+        prepended = withoutInfoChannel.branch
         {
             connor : params.CONNOR_COLLAPSING
             noConnor : true
         }
+
         prependSingleUMI(prepended.connor)
 
         noConnorChannel = prepended.noConnor.map { s, r1, r2, rU -> tuple s, r1, r2 }
 
-        trimmedChannel = prependSingleUMI.out.mix(noConnorChannel)
+        trimmedChannel = noConnorChannel.mix(prependSingleUMI.out)
 
     emit:
         trimmedChannel
+}
+
+workflow trimming
+{
+    take:
+        fastqChannel
+        sampleInfoChannel
+
+    main:
+        withSampleInfoChannel = fastqChannel.combine(sampleInfoChannel, by: 0)
+
+        trimOut = withSampleInfoChannel.branch
+        {
+            tagtrim : it[4]['Index Type'] == 'ThruPLEX DNA-seq Dualindex'
+            trimGalore : params.TRIM_FASTQ
+            noTrim : true
+        }
+
+        trimGaloreWF(trimOut.trimGalore)
+        tagtrimWF(trimOut.tagtrim)
+        noTrimWF(trimOut.noTrim)
+
+        afterTrimmingChannel = noTrimWF.out.mix(trimGaloreWF.out).mix(tagtrimWF.out)
+
+    emit:
+        afterTrimmingChannel
 }
