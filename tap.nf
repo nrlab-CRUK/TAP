@@ -10,7 +10,7 @@ include { connorWF as connor } from './pipelines/connor'
 include { alignment } from './pipelines/alignment'
 include { gatk } from './pipelines/gatk'
 include { filtering } from './pipelines/filtering'
-include { QC } from './pipelines/qc'
+include { fastqc } from './processes/fastqc'
 
 
 def isExome(info)
@@ -84,7 +84,7 @@ workflow
 
     trimming(fastqChannel, sampleInfoChannel)
 
-    alignment(trimming.out, sampleInfoChannel) | connor | gatk | filtering | QC
+    alignment(trimming.out, sampleInfoChannel) | connor | gatk | filtering | fastqc
 
-    publish(QC.out)
+    publish(filtering.out)
 }

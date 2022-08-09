@@ -5,12 +5,13 @@ process fastqc
     cpus   1
 
     publishDir "${launchDir}/reports", mode: 'link', pattern: '*.html'
+    
+    when: params.FASTQC
 
     input:
         tuple val(sampleId), path(bamFile), path(bamIndex)
 
     output:
-        tuple val(sampleId), path(bamFile), path(bamIndex), emit: bamChannel
         path("${sampleId}_fastqc.html"), emit: reportChannel
 
     shell:
@@ -29,24 +30,4 @@ process fastqc
 
         rm -rf temp
         """
-}
-
-workflow QC
-{
-    take:
-        alignmentChannel
-
-    main:
-        decision = alignmentChannel.branch
-        {
-            fastqc: params.FASTQC
-            skip: true
-        }
-
-        fastqc(decision.fastqc)
-
-        afterQCChannel = decision.skip.mix(fastqc.out.bamChannel)
-
-    emit:
-        afterQCChannel
 }
