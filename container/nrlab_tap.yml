@@ -8,8 +8,10 @@ dependencies:
   - bioconda::bwa-mem2=2.2.1
   - bioconda::connor=0.6.1
   - bioconda::fastqc=0.11.9
-  - bioconda::gatk=3.8
-  - bioconda::picard=2.26.10-0
-  - bioconda::samtools=1.14
-  - bioconda::seqkit=0.13.2
+  - bioconda::gatk4=4.2.6.1
+  - bioconda::picard=2.27.4
+  - bioconda::samtools=1.15.1
+  - bioconda::seqkit=2.3.0
   - bioconda::trim-galore=0.6.7
+  - bioconda::hmmcopy=0.1.1
+  - bioconda::r-ichorcna=0.3.2
