@@ -2,6 +2,8 @@
  * Trimming processes.
  */
 
+include { javaMemMB } from '../processes/picard'
+ 
 def baseName(fastqFile)
 {
     def name = fastqFile.name
@@ -46,6 +48,22 @@ process tagtrim
         umi2Out = "${fileBase}.u_2.tagtrim.fq.gz"
 
         template "trimming/tagtrim.sh"
+}
+
+process surecallTrimmer
+{
+    memory '512M'
+
+    input:
+        tuple val(sampleId), path(read1In), path(read2In), path(umiRead), val(info)
+
+    output:
+        tuple val(sampleId), path("read_1.fq.gz"), path("read_2.fq.gz"), path(umiread)
+
+    shell:
+        javaMem = javaMemMB(task)
+        
+        template "trimming/surecallTrimmer.sh"
 }
 
 process prependSingleUMI
@@ -141,6 +159,33 @@ workflow tagtrimWF
         trimmedChannel
 }
 
+workflow surecallWF
+{
+    take:
+        fastqChannel
+
+    main:
+        trimmed = surecallTrimmer(fastqChannel)
+
+        /*
+        prepended = trimmed.branch
+        {
+            connor : params.CONNOR_COLLAPSING
+            noConnor : true
+        }
+
+        prependDoubleUMI(prepended.connor)
+
+        noConnorChannel = prepended.noConnor.map { s, r1, r2, u1, u2 -> tuple s, r1, r2 }
+
+        trimmedChannel = noConnorChannel.mix(prependDoubleUMI.out)
+        */
+
+    emit:
+        //trimmedChannel
+        surecall.out
+}
+
 workflow noTrimWF
 {
     take:
@@ -177,15 +222,17 @@ workflow trimming
         trimOut = withSampleInfoChannel.branch
         {
             tagtrim : it[4]['Index Type'] == 'ThruPLEX DNA-seq Dualindex'
+            surecall : it[4]['Index Type'] == 'SureSelectXT HS2'
             trimGalore : params.TRIM_FASTQ
             noTrim : true
         }
 
         trimGaloreWF(trimOut.trimGalore)
         tagtrimWF(trimOut.tagtrim)
+        surecallWF(trimOut.surecall)
         noTrimWF(trimOut.noTrim)
 
-        afterTrimmingChannel = noTrimWF.out.mix(trimGaloreWF.out).mix(tagtrimWF.out)
+        afterTrimmingChannel = noTrimWF.out.mix(trimGaloreWF.out).mix(tagtrimWF.out).mix(surecallWF.out)
 
     emit:
         afterTrimmingChannel
