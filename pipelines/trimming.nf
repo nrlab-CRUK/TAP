@@ -16,6 +16,7 @@ process trimGalore
 {
     cpus   16
     memory '1G'
+    time   '1h'
 
     input:
         tuple val(sampleId), path(read1), path(read2), path(umiread), val(info)
@@ -33,6 +34,7 @@ process tagtrim
 {
     cpus   5
     memory '256M'
+    time   '1h'
 
     input:
         tuple val(sampleId), path(read1In), path(read2In), path(umiRead), val(info)
@@ -52,7 +54,8 @@ process tagtrim
 
 process surecallTrimmer
 {
-    memory '512M'
+    memory '1g'
+    time   '1h'
 
     input:
         tuple val(sampleId), path(read1In), path(read2In), path(umiRead), val(info)
@@ -62,6 +65,8 @@ process surecallTrimmer
 
     shell:
         javaMem = javaMemMB(task)
+        read1Out = "${read1In.baseName}.*_Cut_0.fastq.gz"
+        read2Out = "${read2In.baseName}.*_Cut_0.fastq.gz"
 
         template "trimming/surecallTrimmer.sh"
 }
