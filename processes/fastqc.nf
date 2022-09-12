@@ -5,7 +5,7 @@ process fastqc
     cpus   1
 
     publishDir "${launchDir}/reports", mode: 'link', pattern: '*.html'
-    
+
     when: params.FASTQC
 
     input:

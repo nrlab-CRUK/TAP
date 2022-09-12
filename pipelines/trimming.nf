@@ -3,7 +3,7 @@
  */
 
 include { javaMemMB } from '../processes/picard'
- 
+
 def baseName(fastqFile)
 {
     def name = fastqFile.name
@@ -62,7 +62,7 @@ process surecallTrimmer
 
     shell:
         javaMem = javaMemMB(task)
-        
+
         template "trimming/surecallTrimmer.sh"
 }
 
@@ -167,23 +167,20 @@ workflow surecallWF
     main:
         trimmed = surecallTrimmer(fastqChannel)
 
-        /*
         prepended = trimmed.branch
         {
             connor : params.CONNOR_COLLAPSING
             noConnor : true
         }
 
-        prependDoubleUMI(prepended.connor)
+        prependSingleUMI(prepended.connor)
 
-        noConnorChannel = prepended.noConnor.map { s, r1, r2, u1, u2 -> tuple s, r1, r2 }
+        noConnorChannel = prepended.noConnor.map { s, r1, r2, rU -> tuple s, r1, r2 }
 
-        trimmedChannel = noConnorChannel.mix(prependDoubleUMI.out)
-        */
+        trimmedChannel = noConnorChannel.mix(prependSingleUMI.out)
 
     emit:
-        //trimmedChannel
-        surecall.out
+        trimmedChannel
 }
 
 workflow noTrimWF
