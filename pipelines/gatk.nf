@@ -1,57 +1,15 @@
-include { javaMemMB } from '../processes/picard'
-
-process createRealignerTargets
-{
-    label 'gatk'
-
-    input:
-        tuple val(sampleId), path(inBam), path(inBai)
-        val(fastaFile)
-        val(knownSites)
-
-    output:
-        tuple val(sampleId), path(inBam), path(inBai), path(intervalsFile)
-
-    shell:
-        javaMem = javaMemMB(task)
-        intervalsFile = "${sampleId}.intervals"
-
-        template "gatk/RealignerTargetCreator.sh"
-}
-
-process indelRealign
-{
-    label 'gatk'
-
-    input:
-        tuple val(sampleId), path(inBam), path(inBai), path(intervalsFile)
-        val(fastaFile)
-
-    output:
-        tuple val(sampleId), path(outBam), path(outBai), path(intervalsFile)
-
-    shell:
-        javaMem = javaMemMB(task)
-        outBam = "${sampleId}.indelrealign.bam"
-        outBai = "${sampleId}.indelrealign.bai"
-
-        template "gatk/IndelRealigner.sh"
-}
-
 process baseCallRecalibrate
 {
     label 'gatk'
 
     input:
-        tuple val(sampleId), path(inBam), path(inBai), path(intervalsFile)
-        val(fastaFile)
+        tuple val(sampleId), path(inBam), path(inBai), path(referenceFasta), path(referenceFastaIndex), path(referenceFastaDictionary), path(knownSites), path(knownSitesIndexes)
 
     output:
-        tuple val(sampleId), path(inBam), path(inBai), path(tableFile)
+        tuple val(sampleId), path(inBam), path(inBai), path(referenceFasta), path(referenceFastaIndex), path(referenceFastaDictionary), path(recalibrationTable)
 
     shell:
-        javaMem = javaMemMB(task)
-        tableFile = "${sampleId}.recalibrated.table"
+        recalibrationTable = "${sampleId}.recalibrated.table"
 
         template "gatk/BaseRecalibrator.sh"
 }
@@ -61,18 +19,16 @@ process recalibrateReads
     label 'gatk'
 
     input:
-        tuple val(sampleId), path(inBam), path(inBai), path(tableFile)
-        val(fastaFile)
+        tuple val(sampleId), path(inBam), path(inBai), path(referenceFasta), path(referenceFastaIndex), path(referenceFastaDictionary), path(recalibrationTable)
 
     output:
         tuple val(sampleId), path(outBam), path(outBai)
 
     shell:
-        javaMem = javaMemMB(task)
         outBam = "${sampleId}.recalibrated.bam"
         outBai = "${sampleId}.recalibrated.bai"
 
-        template "gatk/PrintReads.sh"
+        template "gatk/ApplyBQSR.sh"
 }
 
 workflow gatk
@@ -81,21 +37,28 @@ workflow gatk
         alignmentChannel
 
     main:
-        fastaChannel = channel.of(params.REFERENCE_FASTA)
-        knownSitesChannel = channel.of(params.GATK_KNOWN_SITES)
+        referenceFasta = channel.fromPath("${params.REFERENCE_FASTA}", checkIfExists: true)
+        referenceFastaIndex = channel.fromPath("${params.REFERENCE_FASTA}.fai", checkIfExists: true)
+        referenceFastaExtension = file("${params.REFERENCE_FASTA}").extension
+        referenceFastaDictionary = channel.fromPath("${params.REFERENCE_FASTA}".replaceFirst("${referenceFastaExtension}\$", "dict"), checkIfExists: true)
+        referenceFasta = referenceFasta.combine(referenceFastaIndex).combine(referenceFastaDictionary)
+
+        knownSites = channel.fromPath(params.GATK_KNOWN_SITES, checkIfExists: true).collect()
+        knownSitesIndexes = channel.from(params.GATK_KNOWN_SITES).map { f -> file("${f}.tbi", checkIfExists: true)}.collect()
 
         decision = alignmentChannel.branch
         {
-            gatk : params.GATK_REALIGNMENT
+            gatk : params.GATK_BQSR
             asIs : true
         }
 
-        createRealignerTargets(decision.gatk, fastaChannel, knownSitesChannel)
-        indelRealign(createRealignerTargets.out, fastaChannel)
-        baseCallRecalibrate(indelRealign.out, fastaChannel)
-        recalibrateReads(baseCallRecalibrate.out, fastaChannel)
-
-        recalibratedChannel = decision.asIs.mix(recalibrateReads.out)
+        recalibratedChannel = decision.gatk
+            .combine(referenceFasta)
+            .combine(knownSites.toList())
+            .combine(knownSitesIndexes.toList())
+            | baseCallRecalibrate
+            | recalibrateReads
+            | mix(decision.asIs)
 
     emit:
         recalibratedChannel
