@@ -55,18 +55,18 @@ process tagtrim
 process surecallTrimmer
 {
     memory '1g'
-    time   '1h'
+    time   '8h'
 
     input:
         tuple val(sampleId), path(read1In), path(read2In), path(umiRead), val(info)
 
     output:
-        tuple val(sampleId), path("read_1.fq.gz"), path("read_2.fq.gz"), path(umiread)
+        tuple val(sampleId), path(read1Out), path(read2Out), path(umiread)
 
     shell:
         javaMem = javaMemMB(task)
-        read1Out = "${read1In.baseName}.*_Cut_0.fastq.gz"
-        read2Out = "${read2In.baseName}.*_Cut_0.fastq.gz"
+        read1Out = "${read1In.baseName}*_Cut_0.fastq.gz"
+        read2Out = "${read2In.baseName}*_Cut_0.fastq.gz"
 
         template "trimming/surecallTrimmer.sh"
 }

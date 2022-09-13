@@ -10,6 +10,7 @@ include { connorWF as connor } from './pipelines/connor'
 include { alignment } from './pipelines/alignment'
 include { gatk } from './pipelines/gatk'
 include { filtering } from './pipelines/filtering'
+include { readSelectionWF as readSelection } from './pipelines/readSelection'
 include { fastqc } from './processes/fastqc'
 
 
@@ -84,7 +85,7 @@ workflow
 
     trimming(fastqChannel, sampleInfoChannel)
 
-    alignment(trimming.out, sampleInfoChannel) | connor | gatk | filtering | fastqc
+    alignment(trimming.out, sampleInfoChannel) | connor | gatk | filtering | readSelection | fastqc
 
-    publish(filtering.out)
+    publish(readSelection.out)
 }
