@@ -17,7 +17,7 @@ RUN git clone https://github.com/vasisht/fastq_splitter.git; \
 # Groovy 4
 # There is no package for Groovy in Anaconda
 
-ARG GROOVY_VERSION=4.0.3
+ARG GROOVY_VERSION=4.0.4
 
 RUN wget -q \
     -O /tmp/groovy-${GROOVY_VERSION}.zip \
@@ -34,7 +34,7 @@ RUN curl https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-x
     sh miniconda3.sh -b -p /opt/conda && \
     rm miniconda3.sh
 
-#COPY AGeNT/* /opt/AGeNT/
+COPY AGeNT/* /opt/AGeNT/
 
 COPY nrlab_tap.yml .
 RUN /opt/conda/bin/conda env create -f nrlab_tap.yml

@@ -57,8 +57,8 @@ workflow readSelectionWF
     main:
         decision = alignedChannel.branch
         {
-            bqual: params.READ_SELECTION_METHOD?.toLowerCase() in [ 'basequality', 'bqual' ]
-            length: params.READ_SELECTION_METHOD?.toLowerCase() in [ 'length', 'size' ]
+            bqual: params.READ_SELECTION?.toLowerCase() in [ 'basequality', 'quality', 'bqual' ]
+            length: params.READ_SELECTION?.toLowerCase() in [ 'length', 'size', 'insert' ]
             none : true
         }
 
