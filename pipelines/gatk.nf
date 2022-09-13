@@ -43,7 +43,11 @@ workflow gatk
         referenceFastaDictionary = channel.fromPath("${params.REFERENCE_FASTA}".replaceFirst("${referenceFastaExtension}\$", "dict"), checkIfExists: true)
         referenceFasta = referenceFasta.combine(referenceFastaIndex).combine(referenceFastaDictionary)
 
-        knownSites = channel.fromPath(params.GATK_KNOWN_SITES, checkIfExists: true).collect()
+        // note that channel.fromPath results in an error for the default GATK_KNOWN_SITES
+        // empty list setting - we shouldn't need to set this if not actually running BQSR
+        // hence the use of channel.from and a map function to check the file(s) specify
+        // exist
+        knownSites = channel.from(params.GATK_KNOWN_SITES).map { f -> file(f, checkIfExists: true)}.collect()
         knownSitesIndexes = channel.from(params.GATK_KNOWN_SITES).map { f -> file("${f}.tbi", checkIfExists: true)}.collect()
 
         decision = alignmentChannel.branch
