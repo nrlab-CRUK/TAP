@@ -48,7 +48,7 @@ workflow gatk
         // hence the use of channel.from and a map function to check the file(s) specify
         // exist
         knownSites = channel.from(params.GATK_KNOWN_SITES).map { f -> file(f, checkIfExists: true)}.collect()
-        knownSitesIndexes = channel.from(params.GATK_KNOWN_SITES).map { f -> file("${f}.tbi", checkIfExists: true)}.collect()
+        knownSitesIndexes = channel.from(params.GATK_KNOWN_SITES).map { f -> file("${f}.*", checkIfExists: true)}.collect()
 
         decision = alignmentChannel.branch
         {
