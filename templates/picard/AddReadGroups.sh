@@ -33,7 +33,6 @@ OUTPUT="!{outBam}" \
 !{RGID} \
 !{RGLB} \
 !{RGPL} \
-!{RGPM} \
 !{RGPU} \
 !{RGSM} \
 CREATE_INDEX=false \

@@ -112,9 +112,6 @@ process picard_addreadgroups
         def rgpl = trimToNull(sequencingInfo['SequencingPlatform'])
         RGPL = !rgpl ? "RGPL=Unknown" : "RGPL=\"${rgpl}\""
 
-        def rgpm = trimToNull(sequencingInfo['PlatformModel'])
-        RGPM = !rgpm ? "" : "RGPM=\"${rgpm}\""
-
         def rgpu = trimToNull(sequencingInfo['PlatformUnit'])
         RGPU = !rgpu ? /RGPU="Not available"/ : "RGPU=\"${rgpu}\""
 

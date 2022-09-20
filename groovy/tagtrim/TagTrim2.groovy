@@ -19,7 +19,8 @@ import picocli.CommandLine.Command
 import picocli.CommandLine.ExitCode
 import picocli.CommandLine.Option
 
-@Command(name = "tagtrim2", mixinStandardHelpOptions = true)
+@Command(name = "tagtrim2", mixinStandardHelpOptions = true,
+         description="Trimmer for ThruPLEX DNA-seq Dualindex pools.")
 public class TagTrim2 implements Callable<Integer>
 {
     class Timing
