@@ -3,7 +3,7 @@
 nextflow.enable.dsl = 2
 
 include { grabGrapes } from './functions/initialisation'
-include { getExperimentType } from './functions/databaseAdditions'
+// include { getExperimentType } from './functions/databaseAdditions'
 
 include { trimming } from './pipelines/trimming'
 include { connorWF as connor } from './pipelines/connor'
