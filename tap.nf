@@ -3,7 +3,7 @@
 nextflow.enable.dsl = 2
 
 include { grabGrapes } from './functions/initialisation'
-// include { getExperimentType } from './functions/databaseAdditions'
+include { checkParameters } from './functions/configuration'
 
 include { trimming } from './pipelines/trimming'
 include { connorWF as connor } from './pipelines/connor'
@@ -14,6 +14,10 @@ include { readSelectionWF as readSelection } from './pipelines/readSelection'
 include { fastqc } from './processes/fastqc'
 include { ichorCNAWF as ichorCNA } from './pipelines/ichorCNA'
 
+if (!checkParameters(params))
+{
+    exit 1
+}
 
 def isExome(info)
 {

@@ -88,8 +88,10 @@ process prependSingleUMI
         read2out = "${sampleId}.umi.r_2.fq.gz"
 
         """
-        seqkit concat -w 0 "!{umiread}" "!{read1}" -o "!{read1out}"
-        seqkit concat -w 0 "!{umiread}" "!{read2}" -o "!{read2out}"
+        python3 "${projectDir}/python/concat_fastq.py" \
+            "!{umiread}" "!{read1}" "!{read1out}"
+        python3 "${projectDir}/python/concat_fastq.py" \
+            "!{umiread}" "!{read2}" "!{read2out}"
         """
 }
 
@@ -110,8 +112,10 @@ process prependDoubleUMI
         read2out = "${sampleId}.umi.r_2.fq.gz"
 
         """
-        seqkit concat -w 0 "!{umi1}" "!{read1}" -o "!{read1out}"
-        seqkit concat -w 0 "!{umi2}" "!{read2}" -o "!{read2out}"
+        python3 "${projectDir}/python/concat_fastq.py" \
+            "!{umi1}" "!{read1}" "!{read1out}"
+        python3 "${projectDir}/python/concat_fastq.py" \
+            "!{umi2}" "!{read2}" "!{read2out}"
         """
 }
 
