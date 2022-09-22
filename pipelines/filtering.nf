@@ -40,7 +40,7 @@ workflow filtering
         alignmentChannel
 
     main:
-        blacklistRefChannel = params.BLACKLIST ? channel.fromPath(params.BLACKLIST) : channel.empty
+        blacklistRefChannel = params.BLACKLIST ? channel.fromPath("${params.BLACKLIST}", checkIfExists: true) : channel.empty
 
         decision = alignmentChannel.branch
         {
