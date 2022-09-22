@@ -92,9 +92,9 @@ workflow
 
     trimming(fastqChannel, sampleInfoChannel)
 
-    alignment(trimming.out, sampleInfoChannel) | connor | gatk | filtering | readSelection
+    alignment(trimming.out, sampleInfoChannel) | gatk | filtering | connor | readSelection
 
+    fastqc(filtering.out)
     publish(readSelection.out)
-    fastqc(readSelection.out)
     ichorCNA(readSelection.out)
 }
