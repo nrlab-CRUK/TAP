@@ -20,8 +20,8 @@ with pysam.FastxFile(args.fastq1) as f1, pysam.FastxFile(args.fastq2) as f2, gzi
         if record1.name != record2.name:
             sys.exit("Names do not match for record " + str(count) + ": " + record1.name + ", " + record2.name)
         record1.comment = None
-        record1.sequence = record1.sequence + record2.sequence
-        record1.quality = record1.quality + record2.quality
+        record1.sequence = (record1.sequence or "") + (record2.sequence or "")
+        record1.quality = (record1.quality or "") + (record2.quality or "")
         fo.write(str(record1))
         fo.write("\n")
 
