@@ -69,7 +69,7 @@ workflow
     grabGrapes()
 
     csvChannel =
-        channel.fromPath("alignment.csv")
+        channel.fromPath("${params.INPUTS_CSV}", checkIfExists: true)
             .splitCsv(header: true, quote: '"')
 
     // TODO check the PlatformUnit column exists
