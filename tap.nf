@@ -72,6 +72,8 @@ workflow
         channel.fromPath("alignment.csv")
             .splitCsv(header: true, quote: '"')
 
+    // TODO check the PlatformUnit column exists
+
     fastqChannel = csvChannel
             .map {
                 row ->
@@ -79,7 +81,7 @@ workflow
                       file("${params.FASTQ_DIR}/${row.Read1}", checkIfExists: true),
                       file("${params.FASTQ_DIR}/${row.Read2}", checkIfExists: true),
                       row.UmiRead ? file("${params.FASTQ_DIR}/${row.UmiRead}", checkIfExists: true)
-                                  : file("${params.FASTQ_DIR}/__no_umi.fq.gz", checkIfExists: false)
+                                  : file("${projectDir}/resources/no_umi.fq", checkIfExists: true)
             }
 
     sampleInfoChannel = csvChannel
