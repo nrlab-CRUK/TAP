@@ -19,7 +19,9 @@
 process splitFastq
 {
     cpus 1
-    memory '8MB'
+    memory 8.MB
+    time { 4.hour * task.attempt}
+    maxRetries 1
 
     input:
         tuple val(sampleId), val(read), path(fastqFile)
