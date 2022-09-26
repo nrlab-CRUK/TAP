@@ -20,7 +20,10 @@ process fastqc
         """
         mkdir temp
 
-        ln "!{bamFile}" "!{canonicalBam}"
+        if [ "!{bamFile}" != "!{canonicalBam}"]
+        then
+            ln "!{bamFile}" "!{canonicalBam}"
+        fi
 
         fastqc \
             --threads !{task.cpus} \
