@@ -183,3 +183,10 @@ cluster using `sbatch`:
 ```
 sbatch run_nrlab_tap.sh
 ```
+
+## Workflow overview
+
+The following diagram gives an overview of the workflow with some notes on the
+various steps, many of which are optional.
+
+![Workflow](workflow.drawio.svg)
