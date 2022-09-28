@@ -20,7 +20,7 @@ process fastqc
         """
         mkdir temp
 
-        if [ "!{bamFile}" != "!{canonicalBam}"]
+        if [ "!{bamFile}" != "!{canonicalBam}" ]
         then
             ln "!{bamFile}" "!{canonicalBam}"
         fi
