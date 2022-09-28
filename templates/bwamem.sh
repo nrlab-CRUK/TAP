@@ -3,7 +3,7 @@
 set -eou pipefail
 
 bwa-mem2 mem \
-    -t !{Math.max(1, task.cpus - 1)} \
+    -t !{task.cpus} \
     "!{bwamem2IndexDir}/!{bwamem2IndexPrefix}" \
     !{sequenceFiles} | \
 samtools view \

@@ -11,9 +11,9 @@ include { picard_addreadgroups; picard_fixmate; picard_merge_or_markduplicates }
  */
 process bwamem2
 {
-    cpus 4
-    memory { 8.GB * task.attempt }
-    time 8.hour
+    cpus 3
+    memory { 20.GB + 4.GB * task.attempt }
+    time { 8.hour * task.attempt }
     maxRetries 2
 
     input:
