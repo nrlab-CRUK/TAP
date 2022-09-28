@@ -21,11 +21,11 @@ java -version
 ```
 
 If this gives an error that 'java' could not be found or reports an older
-version (lower than 17), the location of an appropriate Java installation
-can be added to your PATH variable:
+version (lower than 17), you can add Java 17 to your environment on the CI
+cluster using `spack`:
 
 ```
-PATH=/home/bioinformatics/software/java/java17/bin:${PATH}
+spack load openjdk@17
 ```
 
 Nextflow can then be installed as follows:
@@ -60,6 +60,10 @@ Having configured your GitHub credentials, install the workflow as follows:
 ```
 nextflow pull nrlab-CRUK/NRLAB_TAP
 ```
+
+Note that while the pipeline is in active development it will be necessary to
+re-run the `nextflow pull` command from time to time to obtain the latest
+updates.
 
 ### Singularity container and reference data
 
