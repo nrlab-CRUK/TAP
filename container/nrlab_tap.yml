@@ -4,13 +4,13 @@ channels:
   - bioconda
   - defaults
 dependencies:
+  - conda-forge::python>=3.6
   - bioconda::bedtools=2.30.0
   - bioconda::bwa-mem2=2.2.1
-  - bioconda::connor=0.6.1
   - bioconda::fastqc=0.11.9
   - bioconda::gatk4=4.2.6.1
   - bioconda::picard=2.27.4
-  - bioconda::pysam=0.11.2.2  # latest version allowed by connor dependency
+  - bioconda::pysam>=0.19
   - bioconda::samtools=1.15.1
   - bioconda::trim-galore=0.6.7
   - conda-forge:r-base=4.1.3
