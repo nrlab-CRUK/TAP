@@ -36,13 +36,14 @@ RUN curl https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-x
 
 COPY AGeNT/* /opt/AGeNT/
 
-COPY nrlab_tap.yml .
+COPY nrlab_tap.yml connor.yml ./
 RUN /opt/conda/bin/conda env create -f nrlab_tap.yml
+RUN /opt/conda/bin/conda env create -f connor.yml
 
 RUN /opt/conda/bin/conda clean -a
 
 ENV JAVA_HOME /usr/lib/jvm/jre-17
-ENV PATH /opt/groovy-${GROOVY_VERSION}/bin:${JAVA_HOME}/bin:/opt/conda/envs/nrlab_tap/bin:$PATH
+ENV PATH /opt/groovy-${GROOVY_VERSION}/bin:${JAVA_HOME}/bin:/opt/conda/envs/nrlab_tap/bin:/opt/conda/envs/connor/bin:$PATH
 
 RUN Rscript -e "devtools::install_github('hw538/CNAclinic', build_vignettes = FALSE, dependencies = TRUE)"
 

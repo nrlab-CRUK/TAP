@@ -1,0 +1,9 @@
+name: connor
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - conda-forge::python>=3.6
+  - bioconda::connor=0.6.1
+  - bioconda::pysam=0.11.2.2  # latest version allowed by connor dependency
