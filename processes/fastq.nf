@@ -18,9 +18,8 @@
  */
 process splitFastq
 {
-    cpus 1
     memory 8.MB
-    time { 4.hour * task.attempt}
+    time { 12.hour * task.attempt}
     maxRetries 1
 
     input:
