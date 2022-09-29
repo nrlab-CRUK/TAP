@@ -1,8 +1,7 @@
 process fastqc
 {
-    memory '300m'
-    time   '4h'
-    cpus   1
+    memory 300.MB
+    time   4.hour
 
     publishDir "${launchDir}/reports", mode: 'link', pattern: '*.html'
 
