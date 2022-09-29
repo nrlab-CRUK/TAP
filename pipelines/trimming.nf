@@ -15,8 +15,8 @@ def baseName(fastqFile)
 process trimGalore
 {
     cpus   16
-    memory '1G'
-    time   '1h'
+    memory 1.GB
+    time   12.hour
 
     input:
         tuple val(sampleId), path(read1), path(read2), path(umiread), val(info)
@@ -32,9 +32,8 @@ process trimGalore
 
 process tagtrim
 {
-    cpus   5
-    memory '256M'
-    time   '1h'
+    memory 256.MB
+    time   12.hour
 
     input:
         tuple val(sampleId), path(read1In), path(read2In), path(umiRead), val(info)
@@ -54,8 +53,8 @@ process tagtrim
 
 process surecallTrimmer
 {
-    memory '1g'
-    time   '8h'
+    memory 1.GB
+    time   12.hour
 
     input:
         tuple val(sampleId), path(read1In), path(read2In), path(umiRead), val(info)
@@ -76,6 +75,9 @@ process prependSingleUMI
     /*
      * Can optimise this later to do each read as a separate process.
      */
+
+    memory 1.GB
+    time   8.hour
 
     input:
         tuple val(sampleId), path(read1), path(read2), path(umiread)
@@ -100,6 +102,9 @@ process prependDoubleUMI
     /*
      * Can optimise this later to do each read as a separate process.
      */
+
+    memory 1.GB
+    time   8.hour
 
     input:
         tuple val(sampleId), path(read1), path(read2), path(umi1), path(umi2)
