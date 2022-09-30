@@ -2,7 +2,6 @@
 
 nextflow.enable.dsl = 2
 
-include { grabGrapes } from './functions/initialisation'
 include { checkParameters } from './functions/configuration'
 
 include { trimming } from './pipelines/trimming'
@@ -66,8 +65,6 @@ process publish
  */
 workflow
 {
-    grabGrapes()
-
     csvChannel =
         channel.fromPath("${params.INPUTS_CSV}", checkIfExists: true)
             .splitCsv(header: true, quote: '"')

@@ -25,7 +25,7 @@ class TagTrim2:
         self.parser.add_argument("--umi1",  help="UMI one FASTQ file (output).", type=str, required=True)
         self.parser.add_argument("--umi2",  help="UMI two FASTQ file (output).", type=str, required=True)
 
-        self.compressionLevel = 5
+        self.compressionLevel = 2
 
         self.stems = set()
         self.stems.add(TagTrim2.STEM)
