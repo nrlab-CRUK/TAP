@@ -93,7 +93,7 @@ process ichorCNA
         tuple val(sampleId), path(wiggleFile)
 
     output:
-        tuple val(sampleId), path("*.pdf")
+        tuple val(sampleId), path("${sampleId}*")
 
     shell:
         ichorParams = setIchorParameters(params)
