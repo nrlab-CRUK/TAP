@@ -3,7 +3,7 @@
 set -eu
 
 Rscript --vanilla /opt/conda/envs/nrlab_tap/share/r-ichorcna-!{params.ICHORCNA_VERSION}/scripts/runIchorCNA.R \
-    --id "!{sampleId}_plots" \
+    --id "!{sampleId}" \
     --WIG "!{wiggleFile}" \
     --ploidy "!{params.ICHORCNA_PLOIDY}" \
     --normal "!{params.ICHORCNA_NORMAL}" \
