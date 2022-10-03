@@ -2,7 +2,7 @@
 
 nextflow.enable.dsl = 2
 
-include { checkParameters } from './functions/configuration'
+include { checkParameters; writePipelineInfo } from './functions/configuration'
 
 include { trimming } from './pipelines/trimming'
 include { connorWF as connor } from './pipelines/connor'
@@ -68,6 +68,8 @@ workflow
     csvChannel =
         channel.fromPath("${params.INPUTS_CSV}", checkIfExists: true)
             .splitCsv(header: true, quote: '"')
+
+    writePipelineInfo(file("${workDir}/latest_pipeline_info.json"), params)
 
     // TODO check the PlatformUnit column exists
 
