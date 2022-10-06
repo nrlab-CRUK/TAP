@@ -32,6 +32,11 @@ def isWGS(info)
     return wgs
 }
 
+def unitIdGenerator(params, row)
+{
+    return params.UNIT_ID_PARTS.collect { row[it] }.join(params.UNIT_ID_SEPARATOR)
+}
+
 process publish
 {
     executor 'local'
@@ -71,12 +76,10 @@ workflow
 
     writePipelineInfo(file("${workDir}/latest_pipeline_info.json"), params)
 
-    // TODO check the PlatformUnit column exists
-
     fastqChannel = csvChannel
             .map {
                 row ->
-                tuple row.PlatformUnit,
+                tuple unitIdGenerator(params, row),
                       file("${params.FASTQ_DIR}/${row.Read1}", checkIfExists: true),
                       file("${params.FASTQ_DIR}/${row.Read2}", checkIfExists: true),
                       row.UmiRead ? file("${params.FASTQ_DIR}/${row.UmiRead}", checkIfExists: true)
@@ -86,7 +89,7 @@ workflow
     sampleInfoChannel = csvChannel
             .map {
                 row ->
-                tuple row.PlatformUnit, row
+                tuple unitIdGenerator(params, row), row
             }
 
     trimming(fastqChannel, sampleInfoChannel)
