@@ -2,7 +2,9 @@ include { picard_buildbamindex } from '../processes/picard'
 
 process connor
 {
-    time '1h'
+    memory = { 8.GB * task.attempt }
+    time = { 8.hour + 16.hour * (task.attempt - 1) }
+    maxRetries = 2
 
     input:
         tuple val(sampleId), path(bam), path(index)
