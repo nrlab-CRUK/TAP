@@ -19,10 +19,10 @@ process trimGalore
     time   12.hour
 
     input:
-        tuple val(sampleId), path(read1), path(read2), path(umiread), val(info)
+        tuple val(sampleId), path(read1), path(read2), val(hasUmiRead), path(umiread)
 
     output:
-        tuple val(sampleId), path("${fileBase}_val_1.fq.gz"), path("${fileBase}_val_2.fq.gz"), path(umiread)
+        tuple val(sampleId), path("${fileBase}_val_1.fq.gz"), path("${fileBase}_val_2.fq.gz"), val(hasUmiRead), path(umiread)
 
     shell:
         fileBase = baseName(read1)
@@ -36,7 +36,7 @@ process tagtrim
     time   12.hour
 
     input:
-        tuple val(sampleId), path(read1In), path(read2In), path(umiRead), val(info)
+        tuple val(sampleId), path(read1In), path(read2In)
 
     output:
         tuple val(sampleId), path(read1Out), path(read2Out), path(umi1Out), path(umi2Out)
@@ -57,10 +57,10 @@ process surecallTrimmer
     time   12.hour
 
     input:
-        tuple val(sampleId), path(read1In), path(read2In), path(umiRead), val(info)
+        tuple val(sampleId), path(read1In), path(read2In)
 
     output:
-        tuple val(sampleId), path(read1Out), path(read2Out), path(umiread)
+        tuple val(sampleId), path(read1Out), path(read2Out))
 
     shell:
         javaMem = javaMemMB(task)
@@ -131,17 +131,20 @@ workflow trimGaloreWF
         fastqChannel
 
     main:
-        trimmed = trimGalore(fastqChannel)
+        trimmed = trimGalore(fastqChannel.map { s, r1, r2, hU, rU, info -> tuple s, r1, r2, hU, rU })
+
+        // only prepend UMI read if one was specified in the UmiRead column in
+        // the sample sheet AND Connor UMI-based deduplication is requested
 
         prepended = trimmed.branch
         {
-            connor : params.CONNOR_COLLAPSING
+            connor : params.CONNOR_COLLAPSING && it[3]
             noConnor : true
         }
 
-        prependSingleUMI(prepended.connor)
+        prependSingleUMI(prepended.connor.map { s, r1, r2, hU, rU -> tuple s, r1, r2, rU })
 
-        noConnorChannel = prepended.noConnor.map { s, r1, r2, rU -> tuple s, r1, r2 }
+        noConnorChannel = prepended.noConnor.map { s, r1, r2, hU, rU -> tuple s, r1, r2 }
 
         trimmedChannel = noConnorChannel.mix(prependSingleUMI.out)
 
@@ -155,7 +158,10 @@ workflow tagtrimWF
         fastqChannel
 
     main:
-        trimmed = tagtrim(fastqChannel)
+        trimmed = tagtrim(fastqChannel.map { s, r1, r2, hU, rU, info -> tuple s, r1, r2 })
+
+        // only prepend the extracted UMI reads from tagtrim if Connor
+        // deduplication is requested
 
         prepended = trimmed.branch
         {
@@ -179,7 +185,10 @@ workflow surecallWF
         fastqChannel
 
     main:
-        trimmed = surecallTrimmer(fastqChannel)
+        trimmed = surecallTrimmer(fastqChannel.map { s, r1, r2, hU, rU, info -> tuple s, r1, r2 })
+
+        // only prepend the extracted UMI read from Surecall if Connor
+        // deduplication is requested
 
         prepended = trimmed.branch
         {
@@ -187,6 +196,9 @@ workflow surecallWF
             noConnor : true
         }
 
+        // TODO need to replace this with a new, bespoke utility for pre-pending
+        // the UMT bases from the read header; also need to update to use a more
+        // recent version of the AGeNT trimmer
         prependSingleUMI(prepended.connor)
 
         noConnorChannel = prepended.noConnor.map { s, r1, r2, rU -> tuple s, r1, r2 }
@@ -203,17 +215,18 @@ workflow noTrimWF
         fastqChannel
 
     main:
-        withoutInfoChannel = fastqChannel.map { s, r1, r2, rU, info -> tuple s, r1, r2, rU }
+        // only prepend UMI read if one was specified in the UmiRead column in
+        // the sample sheet AND Connor UMI-based deduplication is requested
 
-        prepended = withoutInfoChannel.branch
+        prepended = fastqChannel.branch
         {
-            connor : params.CONNOR_COLLAPSING
+            connor : params.CONNOR_COLLAPSING && it[3]
             noConnor : true
         }
 
-        prependSingleUMI(prepended.connor)
+        prependSingleUMI(prepended.connor.map { s, r1, r2, hU, rU, info -> tuple s, r1, r2, rU })
 
-        noConnorChannel = prepended.noConnor.map { s, r1, r2, rU -> tuple s, r1, r2 }
+        noConnorChannel = prepended.noConnor.map { s, r1, r2, hU, rU, info -> tuple s, r1, r2 }
 
         trimmedChannel = noConnorChannel.mix(prependSingleUMI.out)
 
@@ -232,8 +245,8 @@ workflow trimming
 
         trimOut = withSampleInfoChannel.branch
         {
-            tagtrim : it[4]['Index Type'] == 'ThruPLEX DNA-seq Dualindex'
-            surecall : it[4]['Index Type'] == 'SureSelectXT HS2'
+            tagtrim : it[5]['Index Type'] == 'ThruPLEX DNA-seq Dualindex'
+            surecall : it[5]['Index Type'] == 'SureSelectXT HS2'
             trimGalore : params.TRIM_FASTQ
             noTrim : true
         }

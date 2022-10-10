@@ -82,8 +82,10 @@ workflow
                 tuple unitIdGenerator(params, row),
                       file("${params.FASTQ_DIR}/${row.Read1}", checkIfExists: true),
                       file("${params.FASTQ_DIR}/${row.Read2}", checkIfExists: true),
-                      row.UmiRead ? file("${params.FASTQ_DIR}/${row.UmiRead}", checkIfExists: true)
-                                  : file("${projectDir}/resources/no_umi.fq", checkIfExists: true)
+                      row.UmiRead != null && row.UmiRead.trim().length() > 0,
+                      row.UmiRead != null && row.UmiRead.trim().length() > 0
+                        ? file("${params.FASTQ_DIR}/${row.UmiRead}", checkIfExists: true)
+                        : file("${projectDir}/resources/no_umi.fq", checkIfExists: true)
             }
 
     sampleInfoChannel = csvChannel
