@@ -203,7 +203,9 @@ the cluster such as the following:
 
 nextflow run nrlab-CRUK/NRLAB_TAP \
 	-config nrlab_tap.config \
-	-profile slurm
+	-profile slurm \
+	-with-report nrlab_tap_report.html \
+	-with-timeline nrlab_tap_timeline.html
 ```
 
 Note that we have specified an upper limit on the time for the pipeline run and
