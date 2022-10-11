@@ -16,7 +16,8 @@ process trimGalore
 {
     cpus   16
     memory 1.GB
-    time   12.hour
+    time { 12.hour * task.attempt }
+    maxRetries 1
 
     input:
         tuple val(sampleId), path(read1), path(read2), val(hasUmiRead), path(umiread)
@@ -32,8 +33,9 @@ process trimGalore
 
 process tagtrim
 {
-    memory 256.MB
-    time   12.hour
+    memory { 256.MB * task.attempt }
+    time { 12.hour * task.attempt }
+    maxRetries 1
 
     input:
         tuple val(sampleId), path(read1In), path(read2In)
@@ -51,23 +53,46 @@ process tagtrim
         template "trimming/tagtrim.sh"
 }
 
-process surecallTrimmer
+process agentTrimmer
 {
-    memory 1.GB
-    time   12.hour
+    cpus   4
+    memory { 4.GB * task.attempt }
+    time { 12.hour * task.attempt }
+    maxRetries 1
 
     input:
         tuple val(sampleId), path(read1In), path(read2In)
 
     output:
-        tuple val(sampleId), path(read1Out), path(read2Out))
+        tuple val(sampleId), path(read1Out), path(read2Out)
 
     shell:
         javaMem = javaMemMB(task)
-        read1Out = "${read1In.baseName}*_Cut_0.fastq.gz"
-        read2Out = "${read2In.baseName}*_Cut_0.fastq.gz"
+        read1Out = "${sampleId}_R1.fastq.gz"
+        read2Out = "${sampleId}_R2.fastq.gz"
 
-        template "trimming/surecallTrimmer.sh"
+        template "trimming/agentTrimmer.sh"
+}
+
+process prependXTHS2UMI {
+    memory { 1.GB * task.attempt }
+    time { 8.hour * task.attempt }
+    maxRetries 1
+
+    input:
+        tuple val(sampleId), path(read1), path(read2)
+
+    output:
+        tuple val(sampleId), path(read1out), path(read2out)
+
+    shell:
+        read1out = "${sampleId}.umi.r_1.fq.gz"
+        read2out = "${sampleId}.umi.r_2.fq.gz"
+
+        """
+        python3 "${projectDir}/python/prepend_xths2_umi.py" \
+            "!{read1}" "!{read2}" "!{read1out}" "!{read2out}"
+        """
 }
 
 process prependSingleUMI
@@ -76,8 +101,9 @@ process prependSingleUMI
      * Can optimise this later to do each read as a separate process.
      */
 
-    memory 1.GB
-    time   8.hour
+    memory { 1.GB * task.attempt }
+    time { 8.hour * task.attempt }
+    maxRetries 1
 
     input:
         tuple val(sampleId), path(read1), path(read2), path(umiread)
@@ -103,8 +129,9 @@ process prependDoubleUMI
      * Can optimise this later to do each read as a separate process.
      */
 
-    memory 1.GB
-    time   8.hour
+    memory { 1.GB * task.attempt }
+    time { 8.hour * task.attempt }
+    maxRetries 1
 
     input:
         tuple val(sampleId), path(read1), path(read2), path(umi1), path(umi2)
@@ -179,15 +206,15 @@ workflow tagtrimWF
         trimmedChannel
 }
 
-workflow surecallWF
+workflow agentTrimmerWF
 {
     take:
         fastqChannel
 
     main:
-        trimmed = surecallTrimmer(fastqChannel.map { s, r1, r2, hU, rU, info -> tuple s, r1, r2 })
+        trimmed = agentTrimmer(fastqChannel.map { s, r1, r2, hU, rU, info -> tuple s, r1, r2 })
 
-        // only prepend the extracted UMI read from Surecall if Connor
+        // only prepend the extracted UMT from AGeNT trimmer if Connor
         // deduplication is requested
 
         prepended = trimmed.branch
@@ -199,11 +226,9 @@ workflow surecallWF
         // TODO need to replace this with a new, bespoke utility for pre-pending
         // the UMT bases from the read header; also need to update to use a more
         // recent version of the AGeNT trimmer
-        prependSingleUMI(prepended.connor)
+        prependXTHS2UMI(prepended.connor)
 
-        noConnorChannel = prepended.noConnor.map { s, r1, r2, rU -> tuple s, r1, r2 }
-
-        trimmedChannel = noConnorChannel.mix(prependSingleUMI.out)
+        trimmedChannel = prepended.noConnor.mix(prependXTHS2UMI.out)
 
     emit:
         trimmedChannel
@@ -246,17 +271,17 @@ workflow trimming
         trimOut = withSampleInfoChannel.branch
         {
             tagtrim : it[5]['Index Type'] == 'ThruPLEX DNA-seq Dualindex'
-            surecall : it[5]['Index Type'] == 'SureSelectXT HS2'
+            agentTrimmer : it[5]['Index Type'] == 'SureSelectXT HS2'
             trimGalore : params.TRIM_FASTQ
             noTrim : true
         }
 
         trimGaloreWF(trimOut.trimGalore)
         tagtrimWF(trimOut.tagtrim)
-        surecallWF(trimOut.surecall)
+        agentTrimmerWF(trimOut.agentTrimmer)
         noTrimWF(trimOut.noTrim)
 
-        afterTrimmingChannel = noTrimWF.out.mix(trimGaloreWF.out).mix(tagtrimWF.out).mix(surecallWF.out)
+        afterTrimmingChannel = noTrimWF.out.mix(trimGaloreWF.out).mix(tagtrimWF.out).mix(agentTrimmerWF.out)
 
     emit:
         afterTrimmingChannel
