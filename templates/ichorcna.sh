@@ -2,7 +2,7 @@
 
 set -eu
 
-Rscript --vanilla /opt/conda/envs/nrlab_tap/share/r-ichorcna-!{params.ICHORCNA_VERSION}/scripts/runIchorCNA.R \
+runIchorCNA.R \
     --id "!{sampleId}" \
     --WIG "!{wiggleFile}" \
     --ploidy "!{params.ICHORCNA_PLOIDY}" \
