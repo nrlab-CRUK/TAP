@@ -87,18 +87,40 @@ process ichorCNA
     time '1h'
     memory '4G'
 
-    publishDir 'ichorCNA', mode: 'link'
+    publishDir 'ichorCNA', mode: 'link', pattern: "${sampleId}*"
 
     input:
         tuple val(sampleId), path(wiggleFile)
 
     output:
-        tuple val(sampleId), path("${sampleId}*")
+        path("${sampleId}*")
+        path("ichorCNA.tumour_fraction_and_ploidy.txt"), emit: tfp
+        path("ichorCNA.tMAD.txt"), emit: tmad
 
     shell:
         ichorParams = setIchorParameters(params)
 
         template "ichorcna.sh"
+}
+
+process combineResults
+{
+    executor 'local'
+
+    publishDir 'ichorCNA', mode: 'link'
+
+    input:
+        path(tfp)
+        path(tmad)
+
+    output:
+        path(combined)
+
+    shell:
+        combined = "ichorCNA.summary.txt"
+        """
+        Rscript --vanilla "${projectDir}/R/combine_sample_tables.R" !{tfp} !{tmad} > !{combined}
+        """
 }
 
 workflow ichorCNAWF
@@ -110,4 +132,9 @@ workflow ichorCNAWF
         canonicalChromosomesChannel = channel.fromPath(params.CANONICAL_CHROMOSOMES, checkIfExists: true)
 
         readCounter(alignedChannel, canonicalChromosomesChannel) | ichorCNA
+
+        tfp = ichorCNA.out.tfp.collectFile(name: "ichorCNA.tumour_fraction_and_ploidy.txt", keepHeader: true)
+        tmad = ichorCNA.out.tmad.collectFile(name: "ichorCNA.tMAD.txt", keepHeader: true)
+
+        combineResults(tfp, tmad)
 }
