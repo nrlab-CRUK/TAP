@@ -26,3 +26,13 @@ runIchorCNA.R \
     --plotFileType "!{params.ICHORCNA_PLOT_FILE_TYPE}" \
     --exons "!{params.ICHORCNA_EXONS}" \
     --minMapScore !{params.ICHORCNA_MINIMUM_MAP_SCORE}
+
+head -2 "!{sampleId}.params.txt" > ichorCNA.tumour_fraction_and_ploidy.txt
+
+Rscript --vanilla "!{projectDir}/R/tMAD.R" \
+    --input "!{sampleId}.seg" \
+    --output "ichorCNA.tMAD.txt" \
+    --sample_column "sample" \
+    --segmented_column "median" \
+    --bin_count_column "bins" \
+    --max_log_ratio 5.0
