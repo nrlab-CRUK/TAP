@@ -20,7 +20,7 @@ process byBaseQuality
             "!{inBam}" \
             "!{outBam}" \
             --bqual_mean_min !{params.BASE_QUALITY_MEAN_MINIMUM} \
-            --bqual_first_bases !{params.BASE_QUALITY_MEAN_MINIMUM} \
+            --bqual_first_bases !{params.BASE_QUALITY_FIRST_BASES} \
             --bqual_last_bases !{params.BASE_QUALITY_LAST_BASES}
         """
 }
