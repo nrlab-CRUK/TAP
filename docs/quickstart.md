@@ -59,7 +59,9 @@ If you get an error saying:
 WARN: Cannot read project manifest -- Cause: Remote resource not found: https://api.github.com/repos/nrlab-CRUK/NRLAB_TAP/contents/ne
 xtflow.config
 Remote resource not found: https://api.github.com/repos/nrlab-CRUK/NRLAB_TAP/contents/main.nf
-``` Then you need to create another personal access token. Follow the instructions here:
+``` 
+
+Then you need to create another personal access token. Follow the instructions here:
 https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token
 
 
