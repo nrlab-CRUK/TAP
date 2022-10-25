@@ -1,3 +1,5 @@
+include { safeName } from '../functions/functions'
+
 process fastqc
 {
     memory 300.MB
@@ -8,13 +10,14 @@ process fastqc
     when: params.FASTQC
 
     input:
-        tuple val(sampleId), path(bamFile), path(bamIndex)
+        tuple val(unitId), path(bamFile), path(bamIndex)
 
     output:
-        path("${sampleId}_fastqc.html"), emit: reportChannel
+        path("${safeUnitId}_fastqc.html"), emit: reportChannel
 
     shell:
-        canonicalBam = "${sampleId}.bam"
+        safeUnitId = safeName(unitId)
+        canonicalBam = "${safeUnitId}.bam"
 
         """
         mkdir temp

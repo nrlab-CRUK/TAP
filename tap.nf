@@ -3,7 +3,7 @@
 nextflow.enable.dsl = 2
 
 include { checkParameters; writePipelineInfo } from './functions/configuration'
-include { unitIdGenerator } from './functions/functions'
+include { unitIdGenerator; safeName } from './functions/functions'
 
 include { chunkFastq } from './pipelines/splitAndMerge'
 include { trimming } from './pipelines/trimming'
@@ -30,14 +30,15 @@ process publish
     publishDir "${launchDir}/processed", mode: 'link'
 
     input:
-        tuple val(sampleId), path(bamFile), path(bamIndex)
+        tuple val(unitId), path(bamFile), path(bamIndex)
 
     output:
-        tuple val(sampleId), path(finalBam), path(finalIndex)
+        tuple val(unitId), path(finalBam), path(finalIndex)
 
     shell:
-        finalBam = "${sampleId}.bam"
-        finalIndex = "${sampleId}.bai"
+        safeUnitId = safeName(unitId)
+        finalBam = "${safeUnitId}.bam"
+        finalIndex = "${safeUnitId}.bai"
 
         """
             if [ "!{bamFile}" != "!{finalBam}" ]
