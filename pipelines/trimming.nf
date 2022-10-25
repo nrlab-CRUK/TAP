@@ -164,21 +164,38 @@ workflow trimGaloreWF
         fastqChannel
 
     main:
-        trimmed = trimGalore(fastqChannel.map { s, c, r1, r2, hU, rU, info -> tuple s, c, r1, r2, hU, rU })
+        trimmed = trimGalore(
+            fastqChannel
+            .map
+            {
+                unitId, chunk, read1, read2, hasUmi, readU, info ->
+                tuple unitId, chunk, read1, read2, hasUmi, readU
+            })
 
         // only prepend UMI read if one was specified in the UmiRead column in
         // the sample sheet AND Connor UMI-based deduplication is requested
 
         prepended = trimmed.branch
         {
-            s, c, r1, r2, hasUMI, rU ->
+            unitId, chunk, read1, read2, hasUMI, readU ->
             connor : params.CONNOR_COLLAPSING && hasUMI
             noConnor : true
         }
 
-        prependSingleUMI(prepended.connor.map { s, c, r1, r2, hU, rU -> tuple s, c, r1, r2, rU })
+        prependSingleUMI(
+            prepended.connor
+            .map
+            {
+                unitId, chunk, read1, read2, hasUmi, readU ->
+                tuple unitId, chunk, read1, read2, readU
+            })
 
-        noConnorChannel = prepended.noConnor.map { s, c, r1, r2, hU, rU -> tuple s, c, r1, r2 }
+        noConnorChannel = prepended.noConnor
+            .map
+            {
+                unitId, chunk, read1, read2, hasUmi, readU ->
+                tuple unitId, chunk, read1, read2
+            }
 
         trimmedChannel = noConnorChannel.mix(prependSingleUMI.out)
 
@@ -192,7 +209,13 @@ workflow tagtrimWF
         fastqChannel
 
     main:
-        trimmed = tagtrim(fastqChannel.map { s, c, r1, r2, hU, rU, info -> tuple s, c, r1, r2 })
+        trimmed = tagtrim(
+            fastqChannel
+            .map
+            {
+                unitId, chunk, read1, read2, hasUmi, readU, info ->
+                tuple unitId, chunk, read1, read2
+            })
 
         // only prepend the extracted UMI reads from tagtrim if Connor
         // deduplication is requested
@@ -205,7 +228,13 @@ workflow tagtrimWF
 
         prependDoubleUMI(prepended.connor)
 
-        noConnorChannel = prepended.noConnor.map { s, c, r1, r2, u1, u2 -> tuple s, c, r1, r2 }
+        noConnorChannel =
+            prepended.noConnor
+            .map
+            {
+                unitId, chunk, read1, read2, umi1, umi2 ->
+                tuple unitId, chunk, read1, read2
+            }
 
         trimmedChannel = noConnorChannel.mix(prependDoubleUMI.out)
 
@@ -219,7 +248,12 @@ workflow agentTrimmerWF
         fastqChannel
 
     main:
-        trimmed = agentTrimmer(fastqChannel.map { s, c, r1, r2, hU, rU, info -> tuple s, c, r1, r2 })
+        trimmed = agentTrimmer(
+            fastqChannel.map
+            {
+                unitId, chunk, read1, read2, hasUmi, readU, info ->
+                tuple unitId, chunk, read1, read2
+            })
 
         // only prepend the extracted UMT from AGeNT trimmer if Connor
         // deduplication is requested
@@ -252,14 +286,26 @@ workflow noTrimWF
 
         prepended = fastqChannel.branch
         {
-            s, c, r1, r2, hasUMI, rU ->
+            unitId, chunk, read1, read2, hasUMI, readU ->
             connor : params.CONNOR_COLLAPSING && hasUMI
             noConnor : true
         }
 
-        prependSingleUMI(prepended.connor.map { s, c, r1, r2, hU, rU, info -> tuple s, c, r1, r2, rU })
+        prependSingleUMI(
+            prepended.connor
+            .map
+            {
+                unitId, chunk, read1, read2, hasUmi, readU, info ->
+                tuple unitId, chunk, read1, read2, readU
+            })
 
-        noConnorChannel = prepended.noConnor.map { s, c, r1, r2, hU, rU, info -> tuple s, c, r1, r2 }
+        noConnorChannel =
+            prepended.noConnor
+            .map
+            {
+                unitId, chunk, read1, read2, hasUmi, readU, info ->
+                tuple unitId, chunk, read1, read2
+            }
 
         trimmedChannel = noConnorChannel.mix(prependSingleUMI.out)
 
@@ -287,7 +333,7 @@ workflow trimming
 
         trimOut = withSampleInfoChannel.branch
         {
-            unitId, chunk, r1, r2, hasUMI, rU, info ->
+            unitId, chunk, read1, read2, hasUMI, readU, info ->
             tagtrim : info['Index Type'] == 'ThruPLEX DNA-seq Dualindex'
             agentTrimmer : info['Index Type'] == 'SureSelectXT HS2'
             trimGalore : params.TRIM_FASTQ
