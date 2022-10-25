@@ -26,15 +26,15 @@ process publish
     publishDir "${launchDir}/processed", mode: 'link'
 
     input:
-        tuple val(unitId), path(bamFile), path(bamIndex)
+        tuple val(sampleId), path(bamFile), path(bamIndex)
 
     output:
-        tuple val(unitId), path(finalBam), path(finalIndex)
+        tuple val(sampleId), path(finalBam), path(finalIndex)
 
     shell:
-        safeUnitId = safeName(unitId)
-        finalBam = "${safeUnitId}.bam"
-        finalIndex = "${safeUnitId}.bai"
+        safeSampleId = safeName(sampleId)
+        finalBam = "${safeSampleId}.bam"
+        finalIndex = "${safeSampleId}.bai"
 
         """
             if [ "!{bamFile}" != "!{finalBam}" ]
@@ -64,8 +64,8 @@ workflow
 
     mergeAlignedChunks(alignment.out, csvChannel, chunkFastq.out.chunkCountChannel)
 
-    //gatk(alignment.out)
+    gatk(mergeAlignedChunks.out)
 
-    //fastqc(gatk.out)
-    //publish(gatk.out)
+    publish(gatk.out)
+    fastqc(gatk.out)
 }

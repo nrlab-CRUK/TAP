@@ -10,14 +10,14 @@ process fastqc
     when: params.FASTQC
 
     input:
-        tuple val(unitId), path(bamFile), path(bamIndex)
+        tuple val(sampleId), path(bamFile), path(bamIndex)
 
     output:
-        path("${safeUnitId}_fastqc.html"), emit: reportChannel
+        path("${safeSampleId}_fastqc.html"), emit: reportChannel
 
     shell:
-        safeUnitId = safeName(unitId)
-        canonicalBam = "${safeUnitId}.bam"
+        safeSampleId = safeName(sampleId)
+        canonicalBam = "${safeSampleId}.bam"
 
         """
         mkdir temp
