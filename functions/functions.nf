@@ -38,6 +38,15 @@ def unitIdGenerator(params, row)
 }
 
 /**
+ * Create the sample identifier from the SAMPLE_ID_PARTS and SAMPLE_ID_SEPARATOR
+ * parameters for a given row from the driving CSV file.
+ */
+def sampleIdGenerator(params, row)
+{
+    return params.SAMPLE_ID_PARTS.collect { row[it] }.join(params.SAMPLE_ID_SEPARATOR)
+}
+
+/**
  * Make a name safe to be used as a file name. Everything that's not
  * alphanumeric, dot, underscore or hyphen is converted to an underscore.
  * Spaces are just removed.

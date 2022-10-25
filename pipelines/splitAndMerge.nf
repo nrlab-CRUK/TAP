@@ -2,8 +2,9 @@
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank
 
-include { sizeOf } from '../functions/functions'
+include { sizeOf; sampleIdGenerator } from '../functions/functions'
 include { extractChunkNumber; splitFastq as splitFastq1; splitFastq as splitFastq2; splitFastq as splitFastqU } from "../processes/fastq"
+include { picard_merge_or_markduplicates } from "../processes/picard"
 
 
 /*
@@ -143,4 +144,58 @@ workflow chunkFastq
     emit:
         fastqChannel = combinedChunkChannel
         chunkCountChannel
+}
+
+
+workflow mergeAlignedChunks
+{
+    take:
+        bamChannel
+        sampleInfoChannel
+        chunkCountChannel
+
+    main:
+        // Work out how many chunks each *sample* will be expecting. This is
+        // the sum of the group sizes for each unit within the sample.
+
+        sampleCountsChannel =
+            chunkCountChannel
+            .combine(sampleInfoChannel, by: 0)
+            .map
+            {
+                unitId, groupSize, info ->
+                tuple sampleIdGenerator(params, info), groupSize
+            }
+            .groupTuple()
+            .map
+            {
+                sampleId, groupSizes ->
+                tuple sampleId, groupSizes.sum()
+            }
+
+        // Group the BAM files by sample id. Clues to how many files are expected in each
+        // sample come from sampleCountsChannel.
+
+        groupedBamChannel =
+            bamChannel
+            .combine(sampleInfoChannel, by: 0)
+            .map
+            {
+                unitId, bamFile, info ->
+                tuple sampleIdGenerator(params, info), bamFile
+            }
+            .combine(sampleCountsChannel, by: 0)
+            .map
+            {
+                sampleId, bamFile, fileCount ->
+                tuple groupKey(sampleId, fileCount), bamFile
+            }
+            .groupTuple()
+
+        // Merge the groups of chunks together to form whole sample BAM files.
+
+        picard_merge_or_markduplicates(groupedBamChannel)
+
+    emit:
+        bamChannel = picard_merge_or_markduplicates.out.merged_bam
 }

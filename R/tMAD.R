@@ -18,7 +18,7 @@ option_list <- list(
 
   make_option(c("--segmented_column"), dest = "segmented_column", default = "segmented",
               help = "The column containing segmented log ratio values"),
-              
+
   make_option(c("--bin_count_column"), dest = "bin_count_column",
               help = "The column containing the number of bins for each segment (optional)"
   )

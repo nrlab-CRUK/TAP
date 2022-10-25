@@ -5,15 +5,11 @@ nextflow.enable.dsl = 2
 include { checkParameters; writePipelineInfo } from './functions/configuration'
 include { unitIdGenerator; safeName } from './functions/functions'
 
-include { chunkFastq } from './pipelines/splitAndMerge'
+include { chunkFastq; mergeAlignedChunks } from './pipelines/splitAndMerge'
 include { trimming } from './pipelines/trimming'
-include { connorWF as connor } from './pipelines/connor'
 include { alignment } from './pipelines/alignment'
 include { gatk } from './pipelines/gatk'
-include { filtering } from './pipelines/filtering'
-include { readSelectionWF as readSelection } from './pipelines/readSelection'
 include { fastqc } from './processes/fastqc'
-include { ichorCNAWF as ichorCNA } from './pipelines/ichorCNA'
 
 if (!checkParameters(params))
 {
@@ -64,11 +60,12 @@ workflow
     chunkFastq(csvChannel)
     trimming(chunkFastq.out.fastqChannel, csvChannel)
 
-    alignment(trimming.out, csvChannel, chunkFastq.out.chunkCountChannel)
+    alignment(trimming.out, csvChannel)
 
-    gatk(alignment.out) | filtering | connor | readSelection
+    mergeAlignedChunks(alignment.out, csvChannel, chunkFastq.out.chunkCountChannel)
 
-    fastqc(filtering.out)
-    publish(readSelection.out)
-    ichorCNA(readSelection.out)
+    //gatk(alignment.out)
+
+    //fastqc(gatk.out)
+    //publish(gatk.out)
 }
