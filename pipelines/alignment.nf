@@ -3,7 +3,7 @@
  */
 
 include { safeName } from '../functions/functions'
-include { picard_addreadgroups; picard_fixmate } from "../processes/picard"
+include { addReadGroups; fixMateInformation } from "../processes/picard"
 
 /*
  * Align with BWAmem2 (single read or paired end).
@@ -58,8 +58,8 @@ workflow alignment
         // It is available from sampleInfoChannel, the rows from the CSV file.
         readGroupsChannel = bwamem2.out.combine(sampleInfoChannel, by: 0)
 
-        picard_addreadgroups(readGroupsChannel) | picard_fixmate
+        addReadGroups(readGroupsChannel) | fixMateInformation
 
     emit:
-        bamChannel = picard_fixmate.out
+        bamChannel = fixMateInformation.out
 }

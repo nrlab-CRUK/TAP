@@ -76,7 +76,7 @@ def maxReadsInRam(availableMB, readLength)
  * Run Picard's 'AddOrReplaceReadGroups' to add read group information to an aligned
  * BAM file. Defaults are provided if the alignment.csv file is missing values.
  */
-process picard_addreadgroups
+process addReadGroups
 {
     label "picard"
 
@@ -118,7 +118,7 @@ process picard_addreadgroups
  * Sort a BAM file and fix mate pair information using Picard's
  * 'FixMateInformation' tool. Used for sorting and fixing paired end files.
  */
-process picard_fixmate
+process fixMateInformation
 {
     label "picard"
 
@@ -143,7 +143,7 @@ process picard_fixmate
  * PCR duplicates. Uses Picard's 'MergeSamFiles' for simple merging and
  * 'MarkDuplicates' for duplicate marking.
  */
-process picard_merge_or_markduplicates
+process mergeOrMarkDuplicates
 {
     label "picard"
 
@@ -176,7 +176,7 @@ process picard_merge_or_markduplicates
 /*
  * Sort a BAM file using Picard's 'SortSam' tool.
  */
-process picard_sortsam
+process SortSam
 {
     label "picard"
 
@@ -199,7 +199,7 @@ process picard_sortsam
 /*
  * Create an index for a BAM file.
  */
-process picard_buildbamindex
+process BuildBamIndex
 {
     label "picard"
 

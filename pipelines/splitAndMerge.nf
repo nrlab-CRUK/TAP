@@ -4,7 +4,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank
 
 include { sizeOf; sampleIdGenerator } from '../functions/functions'
 include { extractChunkNumber; splitFastq as splitFastq1; splitFastq as splitFastq2; splitFastq as splitFastqU } from "../processes/fastq"
-include { picard_merge_or_markduplicates } from "../processes/picard"
+include { mergeOrMarkDuplicates } from "../processes/picard"
 
 
 /*
@@ -194,8 +194,8 @@ workflow mergeAlignedChunks
 
         // Merge the groups of chunks together to form whole sample BAM files.
 
-        picard_merge_or_markduplicates(groupedBamChannel)
+        mergeOrMarkDuplicates(groupedBamChannel)
 
     emit:
-        bamChannel = picard_merge_or_markduplicates.out.merged_bam
+        bamChannel = mergeOrMarkDuplicates.out.merged_bam
 }
