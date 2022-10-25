@@ -1,3 +1,4 @@
+include { safeName } from '../functions/functions'
 include { picard_buildbamindex } from '../processes/picard'
 
 process connor
@@ -7,13 +8,13 @@ process connor
     maxRetries = 2
 
     input:
-        tuple val(sampleId), path(bam), path(index)
+        tuple val(unitId), path(bam), path(index)
 
     output:
-        tuple val(sampleId), path(connorFile)
+        tuple val(unitId), path(connorFile)
 
     shell:
-        connorFile = "${sampleId}.connor.bam"
+        connorFile = "${safeName(unitId)}.connor.bam"
 
         template "connor.sh"
 }

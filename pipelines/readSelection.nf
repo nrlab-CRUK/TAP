@@ -1,3 +1,4 @@
+include { safeName } from '../functions/functions'
 include { picard_buildbamindex } from '../processes/picard'
 
 process byBaseQuality
@@ -6,13 +7,13 @@ process byBaseQuality
     memory '256m'
 
     input:
-        tuple val(sampleId), path(inBam), path(inBai)
+        tuple val(unitId), path(inBam), path(inBai)
 
     output:
-        tuple val(sampleId), path(outBam)
+        tuple val(unitId), path(outBam)
 
     shell:
-        outBam = "${sampleId}.selected.bam"
+        outBam = "${safeName(unitId)}.selected.bam"
 
         """
         python3 "${projectDir}/python/read_selection_tools.py" \
@@ -31,13 +32,13 @@ process byLength
     memory '256m'
 
     input:
-        tuple val(sampleId), path(inBam), path(inBai)
+        tuple val(unitId), path(inBam), path(inBai)
 
     output:
-        tuple val(sampleId), path(outBam)
+        tuple val(unitId), path(outBam)
 
     shell:
-        outBam = "${sampleId}.selected.bam"
+        outBam = "${safeName(unitId)}.selected.bam"
 
         """
         python3 "${projectDir}/python/read_selection_tools.py" \

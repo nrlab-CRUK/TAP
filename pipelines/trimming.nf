@@ -2,7 +2,7 @@
  * Trimming processes.
  */
 
-include { javaMemMB } from '../processes/picard'
+include { javaMemMB; safeName } from '../functions/functions'
 
 def baseName(fastqFile)
 {
@@ -20,10 +20,10 @@ process trimGalore
     maxRetries 1
 
     input:
-        tuple val(sampleId), path(read1), path(read2), val(hasUmiRead), path(umiread)
+        tuple val(unitId), val(chunk), path(read1), path(read2), val(hasUmiRead), path(umiread)
 
     output:
-        tuple val(sampleId), path("${fileBase}_val_1.fq.gz"), path("${fileBase}_val_2.fq.gz"), val(hasUmiRead), path(umiread)
+        tuple val(unitId), val(chunk), path("${fileBase}_val_1.fq.gz"), path("${fileBase}_val_2.fq.gz"), val(hasUmiRead), path(umiread)
 
     shell:
         fileBase = baseName(read1)
@@ -38,10 +38,10 @@ process tagtrim
     maxRetries 1
 
     input:
-        tuple val(sampleId), path(read1In), path(read2In)
+        tuple val(unitId), val(chunk), path(read1In), path(read2In)
 
     output:
-        tuple val(sampleId), path(read1Out), path(read2Out), path(umi1Out), path(umi2Out)
+        tuple val(unitId), val(chunk), path(read1Out), path(read2Out), path(umi1Out), path(umi2Out)
 
     shell:
         fileBase = baseName(read1In)
@@ -61,33 +61,37 @@ process agentTrimmer
     maxRetries 1
 
     input:
-        tuple val(sampleId), path(read1In), path(read2In)
+        tuple val(unitId), val(chunk), path(read1In), path(read2In)
 
     output:
-        tuple val(sampleId), path(read1Out), path(read2Out)
+        tuple val(unitId), val(chunk), path(read1Out), path(read2Out)
 
     shell:
         javaMem = javaMemMB(task)
-        read1Out = "${sampleId}_R1.fastq.gz"
-        read2Out = "${sampleId}_R2.fastq.gz"
+        outFilePrefix = "${safeName(unitId)}.c_${chunk}"
+        read1Out = "${outFilePrefix}_R1.fastq.gz"
+        read2Out = "${outFilePrefix}_R2.fastq.gz"
+        umiOut = "${outFilePrefix}_MBC.txt.gz"
 
         template "trimming/agentTrimmer.sh"
 }
 
-process prependXTHS2UMI {
+process prependXTHS2UMI
+{
     memory { 1.GB * task.attempt }
     time { 8.hour * task.attempt }
     maxRetries 1
 
     input:
-        tuple val(sampleId), path(read1), path(read2)
+        tuple val(unitId), val(chunk), path(read1), path(read2)
 
     output:
-        tuple val(sampleId), path(read1out), path(read2out)
+        tuple val(unitId), val(chunk), path(read1out), path(read2out)
 
     shell:
-        read1out = "${sampleId}.umi.r_1.fq.gz"
-        read2out = "${sampleId}.umi.r_2.fq.gz"
+        safeUnitId = safeName(unitId)
+        read1out = "${safeUnitId}.umi.r_1.c_${chunk}.fq.gz"
+        read2out = "${safeUnitId}.umi.r_2.c_${chunk}.fq.gz"
 
         """
         python3 "${projectDir}/python/prepend_xths2_umi.py" \
@@ -106,14 +110,15 @@ process prependSingleUMI
     maxRetries 1
 
     input:
-        tuple val(sampleId), path(read1), path(read2), path(umiread)
+        tuple val(unitId), val(chunk), path(read1), path(read2), path(umiread)
 
     output:
-        tuple val(sampleId), path(read1out), path(read2out)
+        tuple val(unitId), val(chunk), path(read1out), path(read2out)
 
     shell:
-        read1out = "${sampleId}.umi.r_1.fq.gz"
-        read2out = "${sampleId}.umi.r_2.fq.gz"
+        safeUnitId = safeName(unitId)
+        read1out = "${safeUnitId}.umi.r_1.c_${chunk}.fq.gz"
+        read2out = "${safeUnitId}.umi.r_2.c_${chunk}.fq.gz"
 
         """
         python3 "${projectDir}/python/concat_fastq.py" \
@@ -134,14 +139,15 @@ process prependDoubleUMI
     maxRetries 1
 
     input:
-        tuple val(sampleId), path(read1), path(read2), path(umi1), path(umi2)
+        tuple val(unitId), val(chunk), path(read1), path(read2), path(umi1), path(umi2)
 
     output:
-        tuple val(sampleId), path(read1out), path(read2out)
+        tuple val(unitId), val(chunk), path(read1out), path(read2out)
 
     shell:
-        read1out = "${sampleId}.umi.r_1.fq.gz"
-        read2out = "${sampleId}.umi.r_2.fq.gz"
+        safeUnitId = safeName(unitId)
+        read1out = "${safeUnitId}.umi.r_1.c_${chunk}.fq.gz"
+        read2out = "${safeUnitId}.umi.r_2.c_${chunk}.fq.gz"
 
         """
         python3 "${projectDir}/python/concat_fastq.py" \
@@ -158,20 +164,21 @@ workflow trimGaloreWF
         fastqChannel
 
     main:
-        trimmed = trimGalore(fastqChannel.map { s, r1, r2, hU, rU, info -> tuple s, r1, r2, hU, rU })
+        trimmed = trimGalore(fastqChannel.map { s, c, r1, r2, hU, rU, info -> tuple s, c, r1, r2, hU, rU })
 
         // only prepend UMI read if one was specified in the UmiRead column in
         // the sample sheet AND Connor UMI-based deduplication is requested
 
         prepended = trimmed.branch
         {
-            connor : params.CONNOR_COLLAPSING && it[3]
+            s, c, r1, r2, hasUMI, rU ->
+            connor : params.CONNOR_COLLAPSING && hasUMI
             noConnor : true
         }
 
-        prependSingleUMI(prepended.connor.map { s, r1, r2, hU, rU -> tuple s, r1, r2, rU })
+        prependSingleUMI(prepended.connor.map { s, c, r1, r2, hU, rU -> tuple s, c, r1, r2, rU })
 
-        noConnorChannel = prepended.noConnor.map { s, r1, r2, hU, rU -> tuple s, r1, r2 }
+        noConnorChannel = prepended.noConnor.map { s, c, r1, r2, hU, rU -> tuple s, c, r1, r2 }
 
         trimmedChannel = noConnorChannel.mix(prependSingleUMI.out)
 
@@ -185,7 +192,7 @@ workflow tagtrimWF
         fastqChannel
 
     main:
-        trimmed = tagtrim(fastqChannel.map { s, r1, r2, hU, rU, info -> tuple s, r1, r2 })
+        trimmed = tagtrim(fastqChannel.map { s, c, r1, r2, hU, rU, info -> tuple s, c, r1, r2 })
 
         // only prepend the extracted UMI reads from tagtrim if Connor
         // deduplication is requested
@@ -198,7 +205,7 @@ workflow tagtrimWF
 
         prependDoubleUMI(prepended.connor)
 
-        noConnorChannel = prepended.noConnor.map { s, r1, r2, u1, u2 -> tuple s, r1, r2 }
+        noConnorChannel = prepended.noConnor.map { s, c, r1, r2, u1, u2 -> tuple s, c, r1, r2 }
 
         trimmedChannel = noConnorChannel.mix(prependDoubleUMI.out)
 
@@ -212,7 +219,7 @@ workflow agentTrimmerWF
         fastqChannel
 
     main:
-        trimmed = agentTrimmer(fastqChannel.map { s, r1, r2, hU, rU, info -> tuple s, r1, r2 })
+        trimmed = agentTrimmer(fastqChannel.map { s, c, r1, r2, hU, rU, info -> tuple s, c, r1, r2 })
 
         // only prepend the extracted UMT from AGeNT trimmer if Connor
         // deduplication is requested
@@ -245,13 +252,14 @@ workflow noTrimWF
 
         prepended = fastqChannel.branch
         {
-            connor : params.CONNOR_COLLAPSING && it[3]
+            s, c, r1, r2, hasUMI, rU ->
+            connor : params.CONNOR_COLLAPSING && hasUMI
             noConnor : true
         }
 
-        prependSingleUMI(prepended.connor.map { s, r1, r2, hU, rU, info -> tuple s, r1, r2, rU })
+        prependSingleUMI(prepended.connor.map { s, c, r1, r2, hU, rU, info -> tuple s, c, r1, r2, rU })
 
-        noConnorChannel = prepended.noConnor.map { s, r1, r2, hU, rU, info -> tuple s, r1, r2 }
+        noConnorChannel = prepended.noConnor.map { s, c, r1, r2, hU, rU, info -> tuple s, c, r1, r2 }
 
         trimmedChannel = noConnorChannel.mix(prependSingleUMI.out)
 
@@ -259,6 +267,15 @@ workflow noTrimWF
         trimmedChannel
 }
 
+/*
+ * Workflow to split the FASTQ reads into chunks and emit a channel of
+ * per sample per chunk files for trimming and then alignment.
+ *
+ * In: the split FASTQ channe (unitId, chunk, read1, read2, hasUMI, readU)
+ * In: the CSV channel (unitId, row)
+ *
+ * Out: channel (unitId, chunk, read1, read2)
+ */
 workflow trimming
 {
     take:
@@ -270,8 +287,9 @@ workflow trimming
 
         trimOut = withSampleInfoChannel.branch
         {
-            tagtrim : it[5]['Index Type'] == 'ThruPLEX DNA-seq Dualindex'
-            agentTrimmer : it[5]['Index Type'] == 'SureSelectXT HS2'
+            unitId, chunk, r1, r2, hasUMI, rU, info ->
+            tagtrim : info['Index Type'] == 'ThruPLEX DNA-seq Dualindex'
+            agentTrimmer : info['Index Type'] == 'SureSelectXT HS2'
             trimGalore : params.TRIM_FASTQ
             noTrim : true
         }

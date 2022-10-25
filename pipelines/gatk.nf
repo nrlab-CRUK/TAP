@@ -1,15 +1,17 @@
+include { safeName } from '../functions/functions'
+
 process baseCallRecalibrate
 {
     label 'gatk'
 
     input:
-        tuple val(sampleId), path(inBam), path(inBai), path(referenceFasta), path(referenceFastaIndex), path(referenceFastaDictionary), path(knownSites), path(knownSitesIndexes)
+        tuple val(unitId), path(inBam), path(inBai), path(referenceFasta), path(referenceFastaIndex), path(referenceFastaDictionary), path(knownSites), path(knownSitesIndexes)
 
     output:
-        tuple val(sampleId), path(inBam), path(inBai), path(referenceFasta), path(referenceFastaIndex), path(referenceFastaDictionary), path(recalibrationTable)
+        tuple val(unitId), path(inBam), path(inBai), path(referenceFasta), path(referenceFastaIndex), path(referenceFastaDictionary), path(recalibrationTable)
 
     shell:
-        recalibrationTable = "${sampleId}.recalibrated.table"
+        recalibrationTable = "${safeName(unitId)}.recalibrated.table"
 
         template "gatk/BaseRecalibrator.sh"
 }
@@ -19,14 +21,14 @@ process recalibrateReads
     label 'gatk'
 
     input:
-        tuple val(sampleId), path(inBam), path(inBai), path(referenceFasta), path(referenceFastaIndex), path(referenceFastaDictionary), path(recalibrationTable)
+        tuple val(unitId), path(inBam), path(inBai), path(referenceFasta), path(referenceFastaIndex), path(referenceFastaDictionary), path(recalibrationTable)
 
     output:
-        tuple val(sampleId), path(outBam), path(outBai)
+        tuple val(unitId), path(outBam), path(outBai)
 
     shell:
-        outBam = "${sampleId}.recalibrated.bam"
-        outBai = "${sampleId}.recalibrated.bai"
+        outBam = "${safeName(unitId)}.recalibrated.bam"
+        outBai = "${safeName(unitId)}.recalibrated.bai"
 
         template "gatk/ApplyBQSR.sh"
 }

@@ -1,14 +1,12 @@
 #!/bin/bash
 
-nameBase="!{sampleId}.r_!{read}"
-
-splitfastq -n !{params.CHUNK_SIZE} -p "${nameBase}" "!{fastqFile}"
+splitfastq -n !{params.CHUNK_SIZE} -p "!{nameBase}" "!{fastqFile}"
 
 # Need to see if anything was produced. If the input file has no reads,
 # splitfastq doesn't give any output. To make things easier we'll create
 # a single empty file as the split.
 
-firstFile="${nameBase}-S000001.fq.gz"
+firstFile="!{nameBase}-S000001.fq.gz"
 
 if ! [ -e $firstFile ]
 then

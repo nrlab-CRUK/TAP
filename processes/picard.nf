@@ -6,14 +6,7 @@
 
 import static org.apache.commons.lang3.StringUtils.trimToNull
 
-/**
- * Give a number for the Java heap size based on the task memory, allowing for
- * some overhead for the JVM itself from the total allowed.
- */
-def javaMemMB(task)
-{
-    return task.memory.toMega() - 128
-}
+include { javaMemMB; safeName } from '../functions/functions'
 
 /**
  * Calculate the maximum number of reads to hold in RAM for Picard sorting
@@ -88,13 +81,13 @@ process picard_addreadgroups
     label "picard"
 
     input:
-        tuple val(sampleId), val(chunk), path(inBam), val(sequencingInfo)
+        tuple val(unitId), val(chunk), path(inBam), val(sequencingInfo)
 
     output:
-        tuple val(sampleId), val(chunk), path(outBam)
+        tuple val(unitId), val(chunk), path(outBam)
 
     shell:
-        outBam = "${sampleId}.readgroups.${chunk}.bam"
+        outBam = "${safeName(unitId)}.readgroups.c_${chunk}.bam"
         javaMem = javaMemMB(task)
 
         def rgcn = trimToNull(sequencingInfo['SequencingCentre'])
@@ -132,13 +125,13 @@ process picard_fixmate
     cpus 2
 
     input:
-        tuple val(sampleId), val(chunk), path(inBam)
+        tuple val(unitId), val(chunk), path(inBam)
 
     output:
-        tuple val(sampleId), path(outBam)
+        tuple val(unitId), path(outBam)
 
     shell:
-        outBam = "${sampleId}.fixed.${chunk}.bam"
+        outBam = "${safeName(unitId)}.fixed.c_${chunk}.bam"
         javaMem = javaMemMB(task)
         readsInRam = maxReadsInRam(javaMem, 100)
 
@@ -155,16 +148,17 @@ process picard_merge_or_markduplicates
     label "picard"
 
     input:
-        tuple val(sampleId), path(inBams)
+        tuple val(unitId), path(inBams)
 
     output:
-        tuple val(sampleId), path(outBam), path(outBai), emit: merged_bam
+        tuple val(unitId), path(outBam), path(outBai), emit: merged_bam
         path metrics optional true
 
     shell:
-        outBam = "${sampleId}.bam"
-        outBai = "${sampleId}.bai"
-        metrics = "${sampleId}.duplication.txt"
+        safeUnitId = safeName(unitId)
+        outBam = "${safeUnitId}.bam"
+        outBai = "${safeUnitId}.bai"
+        metrics = "${safeUnitId}.duplication.txt"
         javaMem = javaMemMB(task)
         readsInRam = maxReadsInRam(javaMem, 100)
 
@@ -187,14 +181,15 @@ process picard_sortsam
     label "picard"
 
     input:
-        tuple val(sampleId), path(inBam)
+        tuple val(unitId), path(inBam)
 
     output:
-        tuple val(sampleId), path(outBam), path(outBai)
+        tuple val(unitId), path(outBam), path(outBai)
 
     shell:
-        outBam = "${sampleId}.sorted.bam"
-        outBai = "${sampleId}.sorted.bai"
+        safeUnitId = safeName(unitId)
+        outBam = "${safeUnitId}.sorted.bam"
+        outBai = "${safeUnitId}.sorted.bai"
         javaMem = javaMemMB(task)
         readsInRam = maxReadsInRam(javaMem, 100)
 
@@ -209,10 +204,10 @@ process picard_buildbamindex
     label "picard"
 
     input:
-        tuple val(sampleId), path(inBam)
+        tuple val(unitId), path(inBam)
 
     output:
-        tuple val(sampleId), path(inBam), path(outBai)
+        tuple val(unitId), path(inBam), path(outBai)
 
     shell:
         outBai = "${inBam.baseName}.bai"

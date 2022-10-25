@@ -1,3 +1,4 @@
+include { safeName } from '../functions/functions'
 include { picard_buildbamindex } from '../processes/picard'
 
 /**
@@ -67,15 +68,16 @@ process readCounter
         canRunIchorCNA(params)
 
     input:
-        tuple val(sampleId), path(inBam), path(inBai)
+        tuple val(unitId), path(inBam), path(inBai)
         each path(canonicalChromosomes)
 
     output:
-        tuple val(sampleId), path(wiggleFile)
+        tuple val(unitId), path(wiggleFile)
 
     shell:
+        safeUnitId = safeName(unitId)
         bamIndex = "${inBam}.bai"
-        wiggleFile = "${sampleId}.wig"
+        wiggleFile = "${safeUnitId}.wig"
 
         chromosomes = canonicalChromosomes.toRealPath().readLines()
 
@@ -87,17 +89,18 @@ process ichorCNA
     time '1h'
     memory '4G'
 
-    publishDir 'ichorCNA', mode: 'link', pattern: "${sampleId}*"
+    publishDir 'ichorCNA', mode: 'link', pattern: "${safeUnitId}*"
 
     input:
-        tuple val(sampleId), path(wiggleFile)
+        tuple val(unitId), path(wiggleFile)
 
     output:
-        path("${sampleId}*")
+        path("${safeUnitId}*")
         path("ichorCNA.tumour_fraction_and_ploidy.txt"), emit: tfp
         path("ichorCNA.tMAD.txt"), emit: tmad
 
     shell:
+        safeUnitId = safeName(unitId)
         ichorParams = setIchorParameters(params)
 
         template "ichorcna.sh"

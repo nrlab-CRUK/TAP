@@ -3,7 +3,7 @@
 set -eu
 
 runIchorCNA.R \
-    --id "!{sampleId}" \
+    --id "!{safeUnitId}" \
     --WIG "!{wiggleFile}" \
     --ploidy "!{params.ICHORCNA_PLOIDY}" \
     --normal "!{params.ICHORCNA_NORMAL}" \
@@ -27,10 +27,10 @@ runIchorCNA.R \
     --exons "!{params.ICHORCNA_EXONS}" \
     --minMapScore !{params.ICHORCNA_MINIMUM_MAP_SCORE}
 
-head -2 "!{sampleId}.params.txt" > ichorCNA.tumour_fraction_and_ploidy.txt
+head -2 "!{safeUnitId}.params.txt" > ichorCNA.tumour_fraction_and_ploidy.txt
 
 Rscript --vanilla "!{projectDir}/R/tMAD.R" \
-    --input "!{sampleId}.seg" \
+    --input "!{safeUnitId}.seg" \
     --output "ichorCNA.tMAD.txt" \
     --sample_column "sample" \
     --segmented_column "median" \

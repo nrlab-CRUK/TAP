@@ -1,15 +1,16 @@
+include { safeName } from '../functions/functions'
 include { picard_buildbamindex } from '../processes/picard'
 
 process filterReads
 {
     input:
-        tuple val(sampleId), path(inBam), path(inBai)
+        tuple val(unitId), path(inBam), path(inBai)
 
     output:
-        tuple val(sampleId), path(outBam)
+        tuple val(unitId), path(outBam)
 
     shell:
-        outBam = "${sampleId}.simplefiltered.bam"
+        outBam = "${safeName(unitId)}.simplefiltered.bam"
 
         """
         samtools view -h -q !{params.MINIMUM_MAPPING_QUALITY} -F !{params.SAM_EXCLUDE_FLAGS} \
@@ -20,14 +21,14 @@ process filterReads
 process filterBlacklist
 {
     input:
-        tuple val(sampleId), path(inBam)
+        tuple val(unitId), path(inBam)
         each path(blacklistFile)
 
     output:
-        tuple val(sampleId), path(outBam)
+        tuple val(unitId), path(outBam)
 
     shell:
-        outBam = "${sampleId}.filtered.bam"
+        outBam = "${safeName(unitId)}.filtered.bam"
 
         """
         bedtools intersect -v -abam !{inBam} -b !{blacklistFile} > !{outBam}

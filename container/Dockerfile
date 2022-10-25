@@ -14,17 +14,6 @@ RUN git clone https://github.com/vasisht/fastq_splitter.git; \
     popd; \
     rm -rf fastq_splitter
 
-# Groovy 4
-# There is no package for Groovy in Anaconda
-
-ARG GROOVY_VERSION=4.0.4
-
-RUN wget -q \
-    -O /tmp/groovy-${GROOVY_VERSION}.zip \
-    "https://www.apache.org/dyn/closer.lua/groovy/${GROOVY_VERSION}/distribution/apache-groovy-binary-${GROOVY_VERSION}.zip?action=download" && \
-    unzip -d /opt /tmp/groovy-${GROOVY_VERSION}.zip && \
-    rm -f /tmp/groovy-${GROOVY_VERSION}.zip
-
 # Conda
 
 ARG CONDA_VERSION=py39_4.12.0
@@ -49,5 +38,5 @@ COPY AGeNT/trimmer-${AGENT_VERSION}.jar /opt/AGeNT/
 RUN ln -s /opt/AGeNT/trimmer-${AGENT_VERSION}.jar /opt/AGeNT/trimmer.jar
 
 ENV JAVA_HOME /usr/lib/jvm/jre-17
-ENV PATH /opt/groovy-${GROOVY_VERSION}/bin:${JAVA_HOME}/bin:/opt/conda/envs/nrlab_tap/bin:/opt/conda/envs/connor/bin:$PATH
+ENV PATH ${JAVA_HOME}/bin:/opt/conda/envs/nrlab_tap/bin:/opt/conda/envs/connor/bin:$PATH
 
