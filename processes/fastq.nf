@@ -10,7 +10,7 @@ include { safeName } from '../functions/functions'
   */
  def extractChunkNumber(f)
  {
-     def m = f.name =~ /.+-S(\d{6})\.fq(\.gz)?$/
+     def m = f.name =~ /.+-C(\d{6})\.fq(\.gz)?$/
      assert m : "Don't have file pattern with chunk numbers: '${f.name}'"
      return Integer.parseInt(m[0][1], 10)
  }
@@ -31,7 +31,7 @@ process splitFastq
         // Note: glob file name can return a list of files or a single file, not a list of one file.
         // See https://github.com/nextflow-io/nextflow/issues/2425
 
-        tuple val(unitId), val(read), path("*-S??????.fq.gz")
+        tuple val(unitId), val(read), path("*-C??????.fq.gz")
 
     shell:
         nameBase = "${safeName(unitId)}.r_${read}"

@@ -88,7 +88,8 @@ workflow chunkFastq
             .map
             {
                 unitId, info, size ->
-                tuple unitId, 1..size, false, emptyFile
+                // Chunk counts from zero, not from one.
+                tuple unitId, 0..<size, false, emptyFile
             }
             .transpose()
 

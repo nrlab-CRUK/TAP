@@ -23,10 +23,10 @@ process trimGalore
         tuple val(unitId), val(chunk), path(read1), path(read2), val(hasUmiRead), path(umiread)
 
     output:
-        tuple val(unitId), val(chunk), path("${fileBase}_val_1.fq.gz"), path("${fileBase}_val_2.fq.gz"), val(hasUmiRead), path(umiread)
+        tuple val(unitId), val(chunk), path("${outFilePrefix}_val_1.fq.gz"), path("${outFilePrefix}_val_2.fq.gz"), val(hasUmiRead), path(umiread)
 
     shell:
-        fileBase = baseName(read1)
+        outFilePrefix = "${safeName(unitId)}.c_${chunk}"
 
         template "trimming/trimGalore.sh"
 }
@@ -44,11 +44,11 @@ process tagtrim
         tuple val(unitId), val(chunk), path(read1Out), path(read2Out), path(umi1Out), path(umi2Out)
 
     shell:
-        fileBase = baseName(read1In)
-        read1Out = "${fileBase}.r_1.tagtrim.fq.gz"
-        read2Out = "${fileBase}.r_2.tagtrim.fq.gz"
-        umi1Out = "${fileBase}.u_1.tagtrim.fq.gz"
-        umi2Out = "${fileBase}.u_2.tagtrim.fq.gz"
+        outFilePrefix = "${safeName(unitId)}.c_${chunk}"
+        read1Out = "${outFilePrefix}.r_1.tagtrim.fq.gz"
+        read2Out = "${outFilePrefix}.r_2.tagtrim.fq.gz"
+        umi1Out = "${outFilePrefix}.u_1.tagtrim.fq.gz"
+        umi2Out = "${outFilePrefix}.u_2.tagtrim.fq.gz"
 
         template "trimming/tagtrim.sh"
 }
@@ -216,7 +216,7 @@ workflow tagtrimWF
                 unitId, chunk, read1, read2, hasUmi, readU, info ->
                 tuple unitId, chunk, read1, read2
             })
-
+        
         // only prepend the extracted UMI reads from tagtrim if Connor
         // deduplication is requested
 

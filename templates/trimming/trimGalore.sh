@@ -5,6 +5,6 @@ set -eou pipefail
 
 trim_galore \
     --paired --illumina --gzip --length=0 \
-    --basename="!{fileBase}" \
+    --basename="!{outFilePrefix}" \
     --cores=!{Math.max(1, (int)Math.ceil(task.cpus / 4.0))} \
     !{read1} !{read2}

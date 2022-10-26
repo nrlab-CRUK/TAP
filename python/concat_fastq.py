@@ -14,7 +14,7 @@ args = parser.parse_args()
 
 count = 0
 
-with pysam.FastxFile(args.fastq1) as f1, pysam.FastxFile(args.fastq2) as f2, gzip.open(args.output, "wt", compresslevel = 4) as fo: 
+with pysam.FastxFile(args.fastq1) as f1, pysam.FastxFile(args.fastq2) as f2, gzip.open(args.output, "wt", compresslevel = 4) as fo:
     for record1, record2 in zip(f1, f2):
         count += 1
         if record1.name != record2.name:

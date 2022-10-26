@@ -11,13 +11,13 @@ from pysam import FastxRecord, FastxFile
 class TagTrim2:
     STEM = 'GTAGCTCA'
     RSTEM = 'TGAGCTAC'
-    
+
     UMI_LENGTH = 6
     STEM_LENGTH = len(STEM)
     ADDITIONAL_BASES = 3
-    
+
     def __init__(self):
-        self.parser = argparse.ArgumentParser(description="tagtrim2.py - Trimmer for ThruPLEX DNA-seq Dualindex pools.")
+        self.parser = argparse.ArgumentParser(description="TagTrim2.py - Trimmer for ThruPLEX DNA-seq Dualindex pools.")
         self.parser.add_argument("--read1", help="Read one FASTQ file (input).", type=str, required=True)
         self.parser.add_argument("--read2", help="Read two FASTQ file (input).", type=str, required=True)
         self.parser.add_argument("--out1",  help="Read one FASTQ file (output).", type=str, required=True)
@@ -25,7 +25,7 @@ class TagTrim2:
         self.parser.add_argument("--umi1",  help="UMI one FASTQ file (output).", type=str, required=True)
         self.parser.add_argument("--umi2",  help="UMI two FASTQ file (output).", type=str, required=True)
 
-        self.compressionLevel = 2
+        self.compressionLevel = 1
 
         self.stems = set()
         self.stems.add(TagTrim2.STEM)
@@ -35,7 +35,7 @@ class TagTrim2:
 
     def run(self):
         args = self.parser.parse_args()
-        
+
         # print(f"Reading {args.read1} and {args.read2}")
 
         try:
@@ -44,20 +44,19 @@ class TagTrim2:
                  gzip.open(args.out2, "wt", compresslevel = self.compressionLevel, newline = '\n') as out2File, \
                  gzip.open(args.umi1, "wt", compresslevel = self.compressionLevel, newline = '\n') as umi1File, \
                  gzip.open(args.umi2, "wt", compresslevel = self.compressionLevel, newline = '\n') as umi2File:
-                
+
                 read1Iter = iter(read1File)
                 read2Iter = iter(read2File)
-                
-                read1 = next(read1Iter)
-                read2 = next(read2Iter)
-                    
-                while read1 and read2:
+
+                while True:
                     read1 = next(read1Iter)
                     read2 = next(read2Iter)
+
                     self.processReads(read1, read2, out1File, out2File, umi1File, umi2File)
+
         except StopIteration:
             pass
-            
+
     def processReads(self, read1: FastxRecord, read2: FastxRecord,
                      out1File, out2File, umi1File, umi2File):
         b1 = read1.sequence
@@ -76,7 +75,7 @@ class TagTrim2:
         rstem2Pos = b2.find(TagTrim2.RSTEM, insert2Start)
         insert1End = len(b1)
         insert2End = len(b2)
-        
+
         if rstem1Pos >= 0 and rstem2Pos >= 0:
             # Stem in both reads. Looks like these are stems and should be trimmed.
             insert1End = rstem1Pos
@@ -118,7 +117,7 @@ class TagTrim2:
             if stem in self.stems:
                 return TagTrim2.UMI_LENGTH + tagOffset + TagTrim2.STEM_LENGTH
         return -1
-    
+
 
 if __name__ == '__main__':
     TagTrim2().run()

@@ -6,14 +6,6 @@ RUN dnf install -y dnf-plugins-core epel-release && \
     dnf install -y curl gcc git htslib-devel java-17-openjdk java-1.8.0-openjdk procps unzip wget && \
     dnf clean all
 
-# Fastq splitter
-# There is a Python one in Anaconda but it won't split by a number of reads.
-RUN git clone https://github.com/vasisht/fastq_splitter.git; \
-    pushd fastq_splitter; \
-    gcc -o /usr/local/bin/splitfastq fastq_splitter.c -lz; \
-    popd; \
-    rm -rf fastq_splitter
-
 # Conda
 
 ARG CONDA_VERSION=py39_4.12.0
@@ -39,4 +31,3 @@ RUN ln -s /opt/AGeNT/trimmer-${AGENT_VERSION}.jar /opt/AGeNT/trimmer.jar
 
 ENV JAVA_HOME /usr/lib/jvm/jre-17
 ENV PATH ${JAVA_HOME}/bin:/opt/conda/envs/nrlab_tap/bin:/opt/conda/envs/connor/bin:$PATH
-

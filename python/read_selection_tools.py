@@ -20,23 +20,23 @@ print(f"Processing {args.input_bam}")
 selectedReads   = 0
 readsCount      = 0
 
-with pysam.AlignmentFile(args.input_bam, "rb") as samFile: 
+with pysam.AlignmentFile(args.input_bam, "rb") as samFile:
     with pysam.AlignmentFile(args.output_bam, "wb", template=samFile) as selectedSamFile:
         if (args.tool == "length"):
             print(f"Selecting reads between {args.template_min} bp and {args.template_max} bp")
-            
+
             ## test that fetch() returns the number of reads expected
             for read in samFile.fetch():
                 readsCount = readsCount + 1
                 if abs(read.template_length) >= args.template_min and abs(read.template_length) <= args.template_max:
                     selectedSamFile.write(read)
                     selectedReads = selectedReads + 1
-        
+
         if (args.tool == "bqual"):
             print(f"Selecting reads based on average base quality greater than or equal to {args.bqual_mean_min}")
-            
+
             min_read_length = args.bqual_first_bases + args.bqual_last_bases
-            
+
             ## test that fetch() returns the number of reads expected
             for read in samFile.fetch():
                 readsCount = readsCount + 1

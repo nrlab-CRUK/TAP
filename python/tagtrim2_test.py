@@ -15,10 +15,10 @@ from TagTrim2 import TagTrim2
 class MockOutput:
     def __init__(self):
         self.output = []
-    
+
     def write(self, thing):
         self.output.append(thing)
-    
+
     def print(self, thing):
         self.output.append(thing)
 
@@ -32,7 +32,7 @@ class TagTrim2Test(unittest.TestCase):
         self.umiQ = 'U' * len(self.umi)
         self.dnaQ = '@' * len(self.dna)
         self.stemQ = 'x' * TagTrim2.STEM_LENGTH
-    
+
     def testTrim0(self):
         self.doTrim("", "")
 
@@ -54,7 +54,7 @@ class TagTrim2Test(unittest.TestCase):
         read2 = self.basesToRecord(2, b1, q1)
 
         tagtrim = TagTrim2()
-        
+
         read1Out = MockOutput()
         read2Out = MockOutput()
         umi1Out = MockOutput()
@@ -108,7 +108,7 @@ class TagTrim2Test(unittest.TestCase):
         read2 = self.basesToRecord(2, b2, q2)
 
         tagtrim = TagTrim2()
-        
+
         read1Out = MockOutput()
         read2Out = MockOutput()
         umi1Out = MockOutput()
@@ -137,7 +137,7 @@ class TagTrim2Test(unittest.TestCase):
         self.assertEqual(u2[3], self.umiQ, "UMI two base quality wrong.")
 
     def testOverlapping(self):
-    
+
         b1 = self.umi + TagTrim2.STEM + self.dna + TagTrim2.RSTEM + self.dna
 
         q1 = self.umiQ + self.stemQ + self.dnaQ + self.stemQ + self.dnaQ
@@ -150,7 +150,7 @@ class TagTrim2Test(unittest.TestCase):
         read2 = self.basesToRecord(2, b2, q2)
 
         tagtrim = TagTrim2()
-        
+
         read1Out = MockOutput()
         read2Out = MockOutput()
         umi1Out = MockOutput()
