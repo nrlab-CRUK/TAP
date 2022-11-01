@@ -2,7 +2,7 @@
 
 nextflow.enable.dsl = 2
 
-include { checkParameters; writePipelineInfo } from './functions/configuration'
+include { checkParameters; checkDriverCSV; writePipelineInfo } from './functions/configuration'
 include { unitIdGenerator; safeName } from './functions/functions'
 
 include { chunkFastq; mergeAlignedChunks } from './pipelines/splitAndMerge'
@@ -12,6 +12,10 @@ include { gatk } from './pipelines/gatk'
 include { fastqc } from './processes/fastqc'
 
 if (!checkParameters(params))
+{
+    exit 1
+}
+if (!checkDriverCSV(params))
 {
     exit 1
 }
