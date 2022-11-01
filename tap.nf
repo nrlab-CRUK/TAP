@@ -49,6 +49,22 @@ process publish
         """
 }
 
+process recordRun
+{
+    executor 'local'
+    memory   '64m'
+    time     '2m'
+
+    input:
+        val(filenames)
+
+    shell:
+        """
+        python3 "!{projectDir}/python/record_run.py" \
+            "!{filenames.join('" "')}"
+        """
+}
+
 /*
  * Main work flow.
  */
@@ -71,5 +87,13 @@ workflow
     gatk(mergeAlignedChunks.out)
 
     publish(gatk.out)
-    fastqc(gatk.out)
+    
+    recordedFiles = publish.out.map
+    {
+        sampleId, bamFile, bamIndex ->
+        bamFile.name
+    }
+    .toList()
+    
+    recordRun(recordedFiles)
 }
