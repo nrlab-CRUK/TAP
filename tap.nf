@@ -10,6 +10,7 @@ include { trimming } from './pipelines/trimming'
 include { alignment } from './pipelines/alignment'
 include { gatk } from './pipelines/gatk'
 include { fastqc } from './processes/fastqc'
+include { recording as recordRun } from './pipelines/recording'
 
 if (!checkParameters(params))
 {
@@ -49,22 +50,6 @@ process publish
         """
 }
 
-process recordRun
-{
-    executor 'local'
-    memory   '64m'
-    time     '2m'
-
-    input:
-        val(filenames)
-
-    shell:
-        """
-        python3 "!{projectDir}/python/record_run.py" \
-            "!{filenames.join('" "')}"
-        """
-}
-
 /*
  * Main work flow.
  */
@@ -88,12 +73,5 @@ workflow
 
     publish(gatk.out)
     
-    recordedFiles = publish.out.map
-    {
-        sampleId, bamFile, bamIndex ->
-        bamFile.name
-    }
-    .toList()
-    
-    recordRun(recordedFiles)
+    recordRun(csvChannel, publish.out)
 }
