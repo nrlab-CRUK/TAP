@@ -216,7 +216,7 @@ workflow tagtrimWF
                 unitId, chunk, read1, read2, hasUmi, readU, info ->
                 tuple unitId, chunk, read1, read2
             })
-        
+
         // only prepend the extracted UMI reads from tagtrim if Connor
         // deduplication is requested
 

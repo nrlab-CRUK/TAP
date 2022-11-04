@@ -60,7 +60,9 @@ workflow
             .splitCsv(header: true, quote: '"')
             .map { row -> tuple unitIdGenerator(params, row), row }
 
-    writePipelineInfo(file("${workDir}/latest_pipeline_info.json"), params)
+    pipelineInfoFile = file("${workDir}/latest_pipeline_info.json")
+
+    writePipelineInfo(pipelineInfoFile, params)
 
     chunkFastq(csvChannel)
     trimming(chunkFastq.out.fastqChannel, csvChannel)
@@ -72,6 +74,6 @@ workflow
     gatk(mergeAlignedChunks.out)
 
     publish(gatk.out)
-    
-    recordRun(csvChannel, publish.out)
+
+    recordRun(csvChannel, publish.out, pipelineInfoFile)
 }

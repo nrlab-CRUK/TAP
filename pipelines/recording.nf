@@ -7,11 +7,13 @@ process recordRun
     time     '2m'
 
     input:
+        path(pipelineInfoFile)
         val(filenames)
 
     shell:
         """
-        python3 "!{projectDir}/python/record_run.py" \
+        python3 "!{projectDir}/python/RecordRun.py" \
+            --infofile "!{pipelineInfoFile}" \
             "!{filenames.join('" "')}"
         """
 }
@@ -24,18 +26,19 @@ workflow recording
     take:
         csvChannel
         bamChannel
-        
+        pipelineInfoFile
+
     main:
         slxChannel = csvChannel
             .map
             {
                 unitId, row ->
-                tuple sampleIdGenerator(params, row), row.SLXId 
+                tuple sampleIdGenerator(params, row), row.SLXId
             }
             .groupTuple()
-    
+
         slxChannel.view()
-            
+
         recordedFiles = bamChannel
             .join(slxChannel)
             .map
@@ -49,6 +52,6 @@ workflow recording
                 return str
             }
             .toList()
-        
-        recordRun(recordedFiles)
+
+        recordRun(pipelineInfoFile, recordedFiles)
 }

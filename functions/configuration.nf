@@ -78,14 +78,14 @@ def checkDriverCSV(params)
     try
     {
         def unitIds = new TreeBag()
-            
+
         def driverFile = file(params.INPUTS_CSV)
         driverFile.withReader('UTF-8')
         {
             stream ->
             def parser = CSVParser.parse(stream, CSVFormat.DEFAULT.withHeader())
             def first = true
-            
+
             for (def record in parser)
             {
                 if (first)
@@ -100,7 +100,7 @@ def checkDriverCSV(params)
                         log.error "${params.INPUTS_CSV} must contain a column 'Read2'."
                         ok = false
                     }
-                    
+
                     def missingUnitCols = []
                     for (def col in params.UNIT_ID_PARTS)
                     {
@@ -114,7 +114,7 @@ def checkDriverCSV(params)
                         log.error "${params.INPUTS_CSV} is missing one or more columns defined by the UNIT_ID_PARTS parameter: {}", missingUnitCols.join(', ')
                         ok = false
                     }
-                    
+
                     def missingSampleCols = []
                     for (def col in params.SAMPLE_ID_PARTS)
                     {
@@ -128,7 +128,7 @@ def checkDriverCSV(params)
                         log.error "${params.INPUTS_CSV} is missing one or more columns defined by the SAMPLE_ID_PARTS parameter: ${missingSampleCols.join(', ')}"
                         ok = false
                     }
-                    
+
                     first = false
                     if (!ok)
                     {
@@ -147,13 +147,13 @@ def checkDriverCSV(params)
                     log.error "No 'Read2' file name set on line ${rowNum}."
                     ok = false
                 }
-                
+
                 unitIds << params.UNIT_ID_PARTS.collect { record.get(it) }.join(params.UNIT_ID_SEPARATOR)
             }
         }
-        
+
         def nonUniqueUnits = unitIds.findAll { unitIds.getCount(it) > 1 }
-        
+
         if (!nonUniqueUnits.empty)
         {
             log.error "Using the columns \"${params.UNIT_ID_PARTS.join(', ')}\" for the unit fields results in some duplicate unit ids from ${driverFile.name}:\n${nonUniqueUnits.join('\n')}"
@@ -177,7 +177,9 @@ def writePipelineInfo(infoFile, params)
 
         info = [
             params: params,
-            pipelineVersion: workflow.manifest.version
+            pipelineVersion: workflow.manifest.version,
+            runName: workflow.runName,
+            runUUID: workflow.sessionId
         ]
 
         def json = JsonOutput.toJson(info)
