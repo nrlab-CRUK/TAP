@@ -57,7 +57,7 @@ def recordFiles(filesInfo)
 
                 params = [ 'runid': runId, 'filename': filename ]
 
-                def inserted = sql.executeInsert('INSERT INTO rosenfeld_TAPRunFile (runid, filename) VALUES (:runid, :filename)', params)
+                inserted = sql.executeInsert('INSERT INTO rosenfeld_TAPRunFile (runid, filename) VALUES (:runid, :filename)', params)
 
                 params = [ 'fileid': inserted[0][0] ]
 
