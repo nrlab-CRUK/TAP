@@ -6,6 +6,8 @@ process recordRun
     memory   '64m'
     time     '2m'
 
+    errorStrategy 'ignore'
+
     input:
         path(pipelineInfoFile)
         val(filenames)
@@ -36,8 +38,6 @@ workflow recording
                 tuple sampleIdGenerator(params, row), row.SLXId
             }
             .groupTuple()
-
-        slxChannel.view()
 
         recordedFiles = bamChannel
             .join(slxChannel)

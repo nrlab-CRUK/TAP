@@ -49,7 +49,7 @@ class RecordRun:
                                              (os.getlogin(), datetime.datetime.now(), pipelineRunName, pipelineRunId))
                         runid = insertCursor.lastrowid
 
-                        for fileinfo in sys.argv[1:]:
+                        for fileinfo in args.files:
                             parts = fileinfo.split('/')
                             filename = parts[0]
                             slxIds = parts[1:]
