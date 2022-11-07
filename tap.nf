@@ -4,9 +4,6 @@ nextflow.enable.dsl = 2
 
 include { checkParameters; checkDriverCSV; writePipelineInfo } from './functions/configuration'
 include { unitIdGenerator; safeName } from './functions/functions'
-include { grabGrapes } from './functions/initialisation'
-
-grabGrapes()
 
 include { chunkFastq; mergeAlignedChunks } from './pipelines/splitAndMerge'
 include { trimming } from './pipelines/trimming'
