@@ -286,7 +286,7 @@ workflow noTrimWF
 
         prepended = fastqChannel.branch
         {
-            unitId, chunk, read1, read2, hasUMI, readU ->
+            unitId, chunk, read1, read2, hasUMI, readU, info ->
             connor : params.CONNOR_COLLAPSING && hasUMI
             noConnor : true
         }
