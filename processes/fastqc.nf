@@ -5,7 +5,7 @@ process fastqc
     memory 300.MB
     time   4.hour
 
-    publishDir "${launchDir}/reports", mode: 'link', pattern: '*.html'
+    publishDir params.REPORTS_DIR, mode: 'link', pattern: '*.html'
 
     when: params.FASTQC
 

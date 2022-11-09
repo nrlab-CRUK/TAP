@@ -28,7 +28,7 @@ process publish
     time     '2m'
 
     stageInMode 'link'
-    publishDir "${launchDir}/processed", mode: 'link'
+    publishDir params.ALIGNED_DIR, mode: 'link'
 
     input:
         tuple val(sampleId), path(bamFile), path(bamIndex)
