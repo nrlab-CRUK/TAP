@@ -3,6 +3,7 @@
  */
 
 include { safeName } from '../functions/functions'
+include { bwamem2Index } from '../functions/references'
 include { addReadGroups; fixMateInformation } from "../processes/picard"
 
 /*
@@ -44,7 +45,7 @@ workflow alignment
         sampleInfoChannel
 
     main:
-        bwamem2IndexPath = file(params.BWAMEM2_INDEX)
+        bwamem2IndexPath = file(bwamem2Index())
         bwamem2IndexChannel = channel.of(tuple bwamem2IndexPath.parent, bwamem2IndexPath.name)
 
         // Cannot do "each tuple" in the inputs to bwamem2 process.

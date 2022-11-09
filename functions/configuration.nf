@@ -8,6 +8,7 @@ import org.apache.commons.csv.*
 import groovy.json.JsonOutput
 
 include { logException } from './debugging'
+include { referenceFasta; bwamem2Index; gatkKnownSites } from './references'
 
 /*
  * Check the parameters are set and valid.
@@ -15,6 +16,10 @@ include { logException } from './debugging'
 def checkParameters(params)
 {
     def errors = false
+
+    def refFasta = referenceFasta()
+    def refBwamem = bwamem2Index()
+    def knownSites = gatkKnownSites()
 
     params.with
     {
@@ -28,38 +33,25 @@ def checkParameters(params)
             log.error "FASTQ_DIR directory ${FASTQ_DIR} does not exist, or is not a directory."
             errors = true
         }
-        if (!file(REFERENCE_FASTA).exists())
+        if (!file(refFasta).exists())
         {
-            log.error "REFERENCE_FASTA file ${REFERENCE_FASTA} does not exist."
+            log.error "REFERENCE_FASTA file ${refFasta} does not exist."
             errors = true
         }
-        if (file("${BWAMEM2_INDEX}*").empty)
+        if (file("${refBwamem}*").empty)
         {
-            log.error "BWAMEM2_INDEX does not exist as ${BWAMEM2_INDEX}*"
+            log.error "BWAMEM2_INDEX does not exist as ${refBwamem}*"
             errors = true
         }
         if (params.GATK_BQSR)
         {
-            if (params.GATK_KNOWN_SITES)
+            for (def gatkFile in knownSites)
             {
-                def knownSitesFiles = params.GATK_KNOWN_SITES
-                if (!(knownSitesFiles instanceof Collection))
+                if (!file(gatkFile).exists())
                 {
-                    knownSitesFiles = Collections.singletonList(params.GATK_KNOWN_SITES)
+                    log.error "GATK_KNOWN_SITES known sites file ${gatkFile} does not exist."
+                    errors = true
                 }
-                for (def gatkFile in knownSitesFiles)
-                {
-                    if (!file(gatkFile).exists())
-                    {
-                        log.error "GATK_KNOWN_SITES known sites file ${gatkFile} does not exist."
-                        errors = true
-                    }
-                }
-            }
-            else
-            {
-                log.error "GATK_KNOWN_SITES known sites files is not set."
-                errors = true
             }
         }
     }

@@ -29,6 +29,29 @@ def sizeOf(thing)
 }
 
 /**
+ * Make sure a thing is a collection when required.
+ * It might be that the thing passed in isn't a collection, in which
+ * case make it a list containing the single thing.
+ * If the thing is null, return null.
+ *
+ * See https://github.com/nextflow-io/nextflow/issues/2425
+ */
+def makeCollection(thingOrList)
+{
+    if (thingOrList instanceof Collection)
+    {
+        return thingOrList
+    }
+
+    if (thingOrList != null)
+    {
+        return Collections.singletonList(thingOrList)
+    }
+
+    return null
+}
+
+/**
  * Create the unit identifier from the UNIT_ID_PARTS and UNIT_ID_SEPARATOR
  * parameters for a given row from the driving CSV file.
  */

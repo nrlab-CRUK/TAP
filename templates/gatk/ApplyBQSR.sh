@@ -4,6 +4,6 @@ set -e
 
 gatk ApplyBQSR \
     --input "!{inBam}" \
-    --reference "!{referenceFasta}" \
+    --reference "!{referenceFastaFile}" \
     --bqsr-recal-file "!{recalibrationTable}" \
     --output "!{outBam}"

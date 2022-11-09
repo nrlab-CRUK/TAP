@@ -7,4 +7,4 @@ trim_galore \
     --paired --illumina --gzip --length=0 \
     --basename="!{outFilePrefix}" \
     --cores=!{Math.max(1, (int)Math.ceil(task.cpus / 4.0))} \
-    !{read1} !{read2}
+    !{read1In} !{read2In}

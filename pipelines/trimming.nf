@@ -20,13 +20,15 @@ process trimGalore
     maxRetries 1
 
     input:
-        tuple val(unitId), val(chunk), path(read1), path(read2), val(hasUmiRead), path(umiread)
+        tuple val(unitId), val(chunk), path(read1In), path(read2In), val(hasUmiRead), path(umiread)
 
     output:
-        tuple val(unitId), val(chunk), path("${outFilePrefix}_val_1.fq.gz"), path("${outFilePrefix}_val_2.fq.gz"), val(hasUmiRead), path(umiread)
+        tuple val(unitId), val(chunk), path(read1Out), path(read2Out), val(hasUmiRead), path(umiread)
 
     shell:
         outFilePrefix = "${safeName(unitId)}.c_${chunk}"
+        read1Out = "${outFilePrefix}_val_1.fq.gz"
+        read2Out = "${outFilePrefix}_val_2.fq.gz"
 
         template "trimming/trimGalore.sh"
 }
@@ -83,19 +85,19 @@ process prependXTHS2UMI
     maxRetries 1
 
     input:
-        tuple val(unitId), val(chunk), path(read1), path(read2)
+        tuple val(unitId), val(chunk), path(read1In), path(read2In)
 
     output:
-        tuple val(unitId), val(chunk), path(read1out), path(read2out)
+        tuple val(unitId), val(chunk), path(read1Out), path(read2Out)
 
     shell:
         safeUnitId = safeName(unitId)
-        read1out = "${safeUnitId}.umi.r_1.c_${chunk}.fq.gz"
-        read2out = "${safeUnitId}.umi.r_2.c_${chunk}.fq.gz"
+        read1Out = "${safeUnitId}.umi.r_1.c_${chunk}.fq.gz"
+        read2Out = "${safeUnitId}.umi.r_2.c_${chunk}.fq.gz"
 
         """
         python3 "${projectDir}/python/prepend_xths2_umi.py" \
-            "!{read1}" "!{read2}" "!{read1out}" "!{read2out}"
+            "!{read1In}" "!{read2In}" "!{read1Out}" "!{read2Out}"
         """
 }
 
@@ -110,21 +112,21 @@ process prependSingleUMI
     maxRetries 1
 
     input:
-        tuple val(unitId), val(chunk), path(read1), path(read2), path(umiread)
+        tuple val(unitId), val(chunk), path(read1In), path(read2In), path(umiread)
 
     output:
-        tuple val(unitId), val(chunk), path(read1out), path(read2out)
+        tuple val(unitId), val(chunk), path(read1Out), path(read2Out)
 
     shell:
         safeUnitId = safeName(unitId)
-        read1out = "${safeUnitId}.umi.r_1.c_${chunk}.fq.gz"
-        read2out = "${safeUnitId}.umi.r_2.c_${chunk}.fq.gz"
+        read1Out = "${safeUnitId}.umi.r_1.c_${chunk}.fq.gz"
+        read2Out = "${safeUnitId}.umi.r_2.c_${chunk}.fq.gz"
 
         """
         python3 "${projectDir}/python/concat_fastq.py" \
-            "!{umiread}" "!{read1}" "!{read1out}"
+            "!{umiread}" "!{read1In}" "!{read1Out}"
         python3 "${projectDir}/python/concat_fastq.py" \
-            "!{umiread}" "!{read2}" "!{read2out}"
+            "!{umiread}" "!{read2In}" "!{read2Out}"
         """
 }
 
@@ -139,21 +141,21 @@ process prependDoubleUMI
     maxRetries 1
 
     input:
-        tuple val(unitId), val(chunk), path(read1), path(read2), path(umi1), path(umi2)
+        tuple val(unitId), val(chunk), path(read1In), path(read2In), path(umi1), path(umi2)
 
     output:
-        tuple val(unitId), val(chunk), path(read1out), path(read2out)
+        tuple val(unitId), val(chunk), path(read1Out), path(read2Out)
 
     shell:
         safeUnitId = safeName(unitId)
-        read1out = "${safeUnitId}.umi.r_1.c_${chunk}.fq.gz"
-        read2out = "${safeUnitId}.umi.r_2.c_${chunk}.fq.gz"
+        read1Out = "${safeUnitId}.umi.r_1.c_${chunk}.fq.gz"
+        read2Out = "${safeUnitId}.umi.r_2.c_${chunk}.fq.gz"
 
         """
         python3 "${projectDir}/python/concat_fastq.py" \
-            "!{umi1}" "!{read1}" "!{read1out}"
+            "!{umi1}" "!{read1In}" "!{read1Out}"
         python3 "${projectDir}/python/concat_fastq.py" \
-            "!{umi2}" "!{read2}" "!{read2out}"
+            "!{umi2}" "!{read2In}" "!{read2Out}"
         """
 }
 
