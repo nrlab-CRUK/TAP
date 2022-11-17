@@ -8,6 +8,10 @@ include { sampleIdGenerator } from '../functions/functions'
 /**
  * Record the run information in the database for this pipeline.
  *
+ * Records a row in rosenfeld_TAPRun if it doesn't already exist for
+ * this run and links it to any experiments whose layout includes any
+ * of the SLX ids passed in.
+ *
  * @param filesInfo A list of (sample, filename, [slxid]) tuples.
  */
 def recordFiles(filesInfo)
@@ -44,36 +48,27 @@ def recordFiles(filesInfo)
             def inserted = sql.executeInsert('INSERT INTO rosenfeld_TAPRun (runner, runtime, runname, runuuid) VALUES (:runner, :runtime, :runname, :runuuid)', params)
             final def runId = inserted[0][0]
 
-            // List all entries in the rosenfeld_Sequence table to form a map of SLX id to database id.
+            // Find all experiments whose layouts mention any of the SLX ids given.
 
-            def sequenceMap = [:]
-            sql.rows('SELECT id, SLX_id FROM rosenfeld_Sequence').each { sequenceMap[it[1]] = it[0] }
+            def slxIds = filesInfo.collect { sample, filename, slxIds -> slxIds }.flatten().unique()
 
-            filesInfo.each
+            def placeholders = (['?'] * slxIds.size()).join(',')
+            def query = """
+                    SELECT DISTINCT e.idx, e.expid
+                    FROM rosenfeld_Experiment e
+                    INNER JOIN rosenfeld_DNASeq_layout l ON e.expid = l.expid
+                    WHERE l.SLX_ID IN (${placeholders})
+                    """
+
+            def experiments = sql.rows(query, slxIds)
+
+            // Create entries in the rosenfeld_TAPRun_Experiment_Join table to join the experiments
+            // to the newly created run record.
+
+            sql.withBatch('INSERT INTO rosenfeld_TAPRun_Experiment_Join (experimentid, taprunid) VALUES (?, ?)')
             {
-                sample, filename, slxIds ->
-
-                // Save a record for this file.
-
-                params = [ 'runid': runId, 'filename': filename ]
-
-                inserted = sql.executeInsert('INSERT INTO rosenfeld_TAPRunFile (runid, filename) VALUES (:runid, :filename)', params)
-
-                params = [ 'fileid': inserted[0][0] ]
-
-                // Link the file record to the SLX ids in the file.
-
-                slxIds.each
-                {
-                    slx ->
-                    def sequenceId = sequenceMap[slx]
-
-                    if (sequenceId)
-                    {
-                        params['seqid'] = sequenceId
-                        sql.executeInsert('INSERT INTO rosenfeld_TAPRunFile_Sequence_Join (sequenceid, taprunfileid) VALUES (:seqid, :fileid)', params)
-                    }
-                }
+                preparedQuery ->
+                experiments.each { preparedQuery.addBatch(it.idx, runId) }
             }
         }
     }
