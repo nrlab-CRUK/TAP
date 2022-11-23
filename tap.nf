@@ -10,6 +10,7 @@ include { trimming } from './pipelines/trimming'
 include { alignment } from './pipelines/alignment'
 include { gatk } from './pipelines/gatk'
 include { fastqc } from './processes/fastqc'
+include { publish; checksum } from './processes/finishing'
 include { recording as recordRun } from './pipelines/recording'
 
 if (!checkParameters(params))
@@ -19,35 +20,6 @@ if (!checkParameters(params))
 if (!checkDriverCSV(params))
 {
     exit 1
-}
-
-process publish
-{
-    executor 'local'
-    memory   '1m'
-    time     '2m'
-
-    stageInMode 'link'
-    publishDir params.ALIGNED_DIR, mode: 'link'
-
-    input:
-        tuple val(sampleId), path(bamFile), path(bamIndex)
-
-    output:
-        tuple val(sampleId), path(finalBam), path(finalIndex)
-
-    shell:
-        safeSampleId = safeName(sampleId)
-        finalBam = "${safeSampleId}.bam"
-        finalIndex = "${safeSampleId}.bai"
-
-        """
-            if [ "!{bamFile}" != "!{finalBam}" ]
-            then
-                ln "!{bamFile}" "!{finalBam}"
-                ln "!{bamIndex}" "!{finalIndex}"
-            fi
-        """
 }
 
 /*
@@ -74,6 +46,7 @@ workflow
     publish(gatk.out)
 
     fastqc(publish.out)
+    checksum(publish.out)
 
     recordRun(csvChannel, publish.out)
 }

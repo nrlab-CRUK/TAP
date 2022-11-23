@@ -17,8 +17,8 @@ include { sampleIdGenerator } from '../functions/functions'
 def recordFiles(filesInfo)
 {
     Sql.withInstance(
-        'jdbc:mysql://10.20.14.24:3306/rosenfeld?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8',
-        'mysql', null, 'com.mysql.cj.jdbc.Driver')
+        "jdbc:mysql://${params.DB_HOST}:${params.DB_PORT}/${params.DB_NAME}?zeroDateTimeBehavior=convertToNull&characterEncoding=utf8",
+        params.DB_USER, params.DB_PASS, 'com.mysql.cj.jdbc.Driver')
     {
         sql ->
         sql.withTransaction
