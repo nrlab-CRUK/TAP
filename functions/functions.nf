@@ -66,7 +66,7 @@ def unitIdGenerator(params, row)
  */
 def sampleIdGenerator(params, row)
 {
-    return params.SAMPLE_ID_PARTS.collect { row[it] }.join(params.SAMPLE_ID_SEPARATOR)
+    return params.SAMPLE_ID_PARTS.collect { row[it].replaceAll(/\s+/, '') }.join(params.SAMPLE_ID_SEPARATOR)
 }
 
 /**
