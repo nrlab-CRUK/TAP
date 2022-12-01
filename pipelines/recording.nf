@@ -81,6 +81,7 @@ def recordFiles(filesInfo)
 process recordRun
 {
     errorStrategy 'ignore'
+    executor 'local'
 
     input:
         val(filesInfo)
