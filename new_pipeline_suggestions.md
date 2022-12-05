@@ -1,4 +1,4 @@
-Thoughts:
+Feedback:
 
 1. merge bams from same sample but sequenced in different lanes . Is this already implemented? (Haichao, Paulius)
 
@@ -25,10 +25,10 @@ A wrapper would be a quick solution to generate a similar .csv file when using d
 7. haichao: `[Minor]` in the config file:   `nrlab_tap.config` → `alignment.config` <img width="1222" alt="image" src="https://user-images.githubusercontent.com/15274940/205628766-5e980e90-7848-455a-810a-a4317d7e86b5.png">
 
 
-8. haichao:  `[Minor]` In the documentation, need to clarify that user need to copy the `/home/bioinformatics/pipelinesoftware/nrlab_tap/nrlabtap-latest.sif` file to assets folder, otherwise will have this error: <img width="813" alt="image" src="https://user-images.githubusercontent.com/15274940/205629071-80590768-210b-4ace-8865-a476be773ac9.png">
+8. haichao:  `[Minor]` In the documentation, need to clarify that user need to copy the `/home/bioinformatics/pipelinesoftware/nrlab_tap/nrlabtap-latest.sif` file to assets folder, otherwise the job won't run: <img width="813" alt="image" src="https://user-images.githubusercontent.com/15274940/205629071-80590768-210b-4ace-8865-a476be773ac9.png">
 
 
 
 
-Feedback:
+
 
