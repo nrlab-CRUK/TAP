@@ -36,6 +36,11 @@ A wrapper would be a quick solution to generate a similar .csv file when using d
 
 
 10. haichao: compulsory requirement for the SequencingData format in the aligment.csv file, error occurs when I made my own csv file to for external fq files. 
-11. ![image](https://user-images.githubusercontent.com/15274940/206854001-6866d8a2-1adc-49be-ae60-e1d26fe02c56.png)
+ ![image](https://user-images.githubusercontent.com/15274940/206854001-6866d8a2-1adc-49be-ae60-e1d26fe02c56.png)
+ 
+11.  Markduplicates process CANCELLED due to time limit, maybe make the Markdup step time limit longer? 
+
+![image](https://user-images.githubusercontent.com/15274940/206878806-f059e18c-4af7-48b5-8667-cd2890becad4.png)
+
 
 
