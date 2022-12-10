@@ -33,3 +33,9 @@ A wrapper would be a quick solution to generate a similar .csv file when using d
 
 ![image](https://user-images.githubusercontent.com/15274940/205629811-07429b70-96ed-446d-baa2-dcdf947a46eb.png)
 
+
+
+10. haichao: compulsory requirement for the SequencingData format in the aligment.csv file, error occurs when I made my own csv file to for external fq files. 
+11. ![image](https://user-images.githubusercontent.com/15274940/206854001-6866d8a2-1adc-49be-ae60-e1d26fe02c56.png)
+
+
