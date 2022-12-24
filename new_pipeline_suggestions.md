@@ -42,5 +42,5 @@ A wrapper would be a quick solution to generate a similar .csv file when using d
 
 ![image](https://user-images.githubusercontent.com/15274940/206878806-f059e18c-4af7-48b5-8667-cd2890becad4.png)
 
-
+12. Important issue!: missing essential ref files in bioinformatics folders:/mnt/scratcha/bioinformatics/rosenfeld_references
 
