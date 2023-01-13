@@ -25,9 +25,17 @@ RUN /opt/conda/bin/conda clean -a
 # files which contains a version number
 RUN ln -s /opt/conda/envs/nrlab_tap/share/r-ichorcna-* /opt/conda/envs/nrlab_tap/share/r-ichorcna
 
+# There is no groovy in conda
+
+ARG GROOVY_VERSION=4.0.7
+RUN wget -O /tmp/groovy.zip https://groovy.jfrog.io/artifactory/dist-release-local/groovy-zips/apache-groovy-binary-${GROOVY_VERSION}.zip && \
+    unzip -d /opt /tmp/groovy.zip && \
+    rm -f /tmp/groovy.zip
+
 ARG AGENT_VERSION=3.0.5
 COPY AGeNT/trimmer-${AGENT_VERSION}.jar /opt/AGeNT/
 RUN ln -s /opt/AGeNT/trimmer-${AGENT_VERSION}.jar /opt/AGeNT/trimmer.jar
 
 ENV JAVA_HOME /usr/lib/jvm/jre-17
-ENV PATH ${JAVA_HOME}/bin:/opt/conda/envs/nrlab_tap/bin:/opt/conda/envs/connor/bin:$PATH
+ENV GROOVY_HOME /opt/groovy-${GROOVY_VERSION}
+ENV PATH ${JAVA_HOME}/bin:${GROOVY_HOME}/bin:/opt/conda/envs/nrlab_tap/bin:/opt/conda/envs/connor/bin:$PATH
