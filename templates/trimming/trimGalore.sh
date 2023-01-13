@@ -1,4 +1,6 @@
-set -eou pipefail
+#!/bin/bash
+
+set -eo
 
 # See the help for trim_galore for --cores and why it's divided by four.
 # It is recommended to give the task 16 cores as a sweet spot.
@@ -8,3 +10,8 @@ trim_galore \
     --basename="!{outFilePrefix}" \
     --cores=!{Math.max(1, (int)Math.ceil(task.cpus / 4.0))} \
     !{read1In} !{read2In}
+
+if [ "!{params.EAGER_CLEANUP}" == "true" -a $? -eq 0 ]
+then
+    groovy "!{projectDir}/groovy/removeInput.groovy" !{read1In} !{read2In}
+fi

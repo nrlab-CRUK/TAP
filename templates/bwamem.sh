@@ -9,3 +9,9 @@ bwa-mem2 mem \
     "!{read2}" | \
 samtools view \
     -b -h -o "!{outBam}"
+
+if [ "!{params.EAGER_CLEANUP}" == "true" ]
+then
+    groovy "!{projectDir}/groovy/removeInput.groovy" \
+        "!{read1}" "!{read2}"
+fi

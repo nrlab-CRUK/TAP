@@ -22,9 +22,12 @@ def remove(path)
         return false
     }
 
+    final def TAG = 'EAGER_CLEANUP'
+
     if (Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS))
     {
         Files.delete(path)
+        println("${TAG}: Removed regular file ${path}")
         return true
     }
 
@@ -35,6 +38,7 @@ def remove(path)
         if (removed)
         {
             Files.delete(path)
+            println("${TAG}: Removed symbolic link ${path}")
             return true
         }
     }
