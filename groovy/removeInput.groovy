@@ -34,6 +34,11 @@ def remove(path)
     if (Files.isSymbolicLink(path))
     {
         def target = Files.readSymbolicLink(path)
+        if (path.parent)
+        {
+            target = path.parent.resolve(target)
+        }
+        // println("${TAG}: Symbolic link ${path} target is ${target}")
         def removed = remove(target)
         if (removed)
         {

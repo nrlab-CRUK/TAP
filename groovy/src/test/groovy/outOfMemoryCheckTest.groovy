@@ -14,14 +14,14 @@ import org.junit.jupiter.api.*
 class OutOfMemoryCheckTest
 {
     final def commandLogName = '.command.log'
-    def basedir
+    def baseDir
     def commandLog
     def command
 
     OutOfMemoryCheckTest()
     {
-        basedir = new File(System.getProperty('basedir'))
-        commandLog = new File(basedir, commandLogName)
+        baseDir = new File(System.getProperty('basedir'))
+        commandLog = new File(baseDir, commandLogName)
     }
 
     @BeforeEach
@@ -101,7 +101,7 @@ class OutOfMemoryCheckTest
     private Process run(command)
     {
         def pb = new ProcessBuilder(command)
-        pb.directory(basedir)
+        pb.directory(baseDir)
         def proc = pb.start()
         proc.waitFor()
         return proc

@@ -77,4 +77,6 @@ COMPRESSION_LEVEL=5 \
 VALIDATION_STRINGENCY=SILENT \
 TMP_DIR="$TMPDIR"
 
+groovy "!{projectDir}/groovy/outOfMemoryCheck.groovy" $?
+
 clean_up $?

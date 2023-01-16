@@ -1,6 +1,6 @@
 /**
- * Script that takes the given exit code from a Java process and
- * looks at the .command.log file created by Nextflow. If it
+ * Script that takes the given exit code from a Java or Groovy process
+ * and looks at the .command.log file created by Nextflow. If it
  * contains the text "java.lang.OutOfMemoryError" then the exit
  * code is changed to 104 to signify this. Otherwise the exit
  * code passed into the script is returned.
