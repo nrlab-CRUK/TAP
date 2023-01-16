@@ -11,7 +11,8 @@ java -Xms!{javaMem}m -Xmx!{javaMem}m \
      -minFractionRead !{params.TRIM_MINIMUM_FRACTION_READ} \
      -qualityTrimming !{params.TRIM_QUALITY_THRESHOLD}
 
-if [ "!{params.EAGER_CLEANUP}" == "true" -a $? -eq 0 ]
-then
-    groovy "!{projectDir}/groovy/removeInput.groovy" !{read1In} !{read2In}
-fi
+groovy "!{projectDir}/groovy/outOfMemoryCheck.groovy" $?
+
+groovy "!{projectDir}/groovy/removeInput.groovy" !{params.EAGER_CLEANUP} $? \
+    !{read1In} \
+    !{read2In}

@@ -42,7 +42,7 @@ class RemoveInputTest
     @BeforeEach
     void setup()
     {
-        command = [ 'groovy', 'removeInput.groovy' ]
+        command = [ 'groovy', 'removeInput.groovy', 'true', '0' ]
 
         FileUtils.deleteQuietly(testDir)
         FileUtils.forceMkdir(testDir)
@@ -139,7 +139,7 @@ class RemoveInputTest
     @Test
     void deleteFromFileDirectory()
     {
-        command = [ 'groovy', '../../removeInput.groovy' ]
+        command = [ 'groovy', '../../removeInput.groovy', 'true', '0' ]
 
         run(command, testDir, paths[2], paths[4], paths[5])
 

@@ -7,6 +7,10 @@ import java.nio.file.*
  * is missing (broken link).
  *
  * Keeps directories (no recursive delete).
+ *
+ * Only runs when told that eager clean up is on and the exit code of the
+ * main part of the process is zero (success). Exits with the same exit
+ * code as the main part of the process.
  */
 def remove(path)
 {
@@ -51,8 +55,33 @@ def remove(path)
     return false
 }
 
-args.each
+def exitCode = 0
+
+if (args.length >= 2)
 {
-    def file = new File(it)
-    remove(file.toPath())
+    try
+    {
+        def doRemovals = Boolean.parseBoolean(args[0])
+        exitCode = Integer.parseInt(args[1])
+        def files = Arrays.asList(args).subList(2, args.length)
+
+        if (doRemovals && exitCode == 0)
+        {
+            files.each
+            {
+                def file = new File(it)
+                remove(file.toPath())
+            }
+        }
+    }
+    catch (NumberFormatException e)
+    {
+        System.err.println("The exit code doesn't seem to be a number. Will not do anything in removeInput.groovy")
+    }
 }
+else
+{
+    System.err.println("Too few arguments to do anything in removeInput.groovy")
+}
+
+System.exit(exitCode)

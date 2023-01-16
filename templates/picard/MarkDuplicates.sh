@@ -53,10 +53,7 @@ mkdir -p "$TMPDIR"
 
 function clean_up
 {
-    if [ "!{params.EAGER_CLEANUP}" == "true" -a $1 -eq 0 ]
-    then
-        groovy "!{projectDir}/groovy/removeInput.groovy" !{inBams}
-    fi
+    groovy "!{projectDir}/groovy/removeInput.groovy" !{params.EAGER_CLEANUP} $1 !{inBams}
 
     rm -rf "$TMPDIR"
     exit $1

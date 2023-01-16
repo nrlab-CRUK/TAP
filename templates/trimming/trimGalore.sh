@@ -11,7 +11,6 @@ trim_galore \
     --cores=!{Math.max(1, (int)Math.ceil(task.cpus / 4.0))} \
     !{read1In} !{read2In}
 
-if [ "!{params.EAGER_CLEANUP}" == "true" -a $? -eq 0 ]
-then
-    groovy "!{projectDir}/groovy/removeInput.groovy" !{read1In} !{read2In}
-fi
+groovy "!{projectDir}/groovy/removeInput.groovy" !{params.EAGER_CLEANUP} $? \
+    !{read1In} \
+    !{read2In}
