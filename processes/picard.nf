@@ -78,7 +78,7 @@ def maxReadsInRam(availableMB, readLength)
  */
 process addReadGroups
 {
-    label "picard"
+    label "picardSmall"
 
     input:
         tuple val(unitId), val(chunk), path(inBam), val(sequencingInfo)
@@ -120,7 +120,7 @@ process addReadGroups
  */
 process fixMateInformation
 {
-    label "picard"
+    label "picardSmall"
 
     cpus 2
 
@@ -145,7 +145,7 @@ process fixMateInformation
  */
 process mergeOrMarkDuplicates
 {
-    label "picard"
+    label "picardLarge"
 
     input:
         tuple val(unitId), path(inBams)

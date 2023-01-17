@@ -12,6 +12,9 @@
 # This tool accepts INPUT BAM and SAM files or URLs from the Global Alliance for Genomics and Health (GA4GH)
 # (see http://ga4gh.org/#/documentation).
 
+
+set +e  # Don't fail on error
+
 export TMPDIR=temp
 mkdir -p "$TMPDIR"
 

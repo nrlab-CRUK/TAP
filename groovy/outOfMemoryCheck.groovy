@@ -11,6 +11,11 @@ def status = args.length > 0 ? Integer.parseInt(args[0]) : 0
 def log = new File(".command.log")
 def outOfMemoryClass = OutOfMemoryError.class.name
 
+// def tag = "OUTOFMEMORYCHECK"
+
+// println("${tag}: status = ${status}")
+// println("${tag}: log file exists = ${log.exists()}")
+
 if (log.exists())
 {
     def ranOutOfMemory = false
@@ -18,11 +23,14 @@ if (log.exists())
     {
         reader ->
         def line
-        while (!ranOutOfMemory && (line = reader.readLine()))
+        
+        // != null is important, as without it the emtpy string is also interpreted as false.
+        while (!ranOutOfMemory && (line = reader.readLine()) != null)
         {
             ranOutOfMemory = line.contains(outOfMemoryClass)
         }
     }
+    // println("${tag}: out of memory = ${ranOutOfMemory}")
     status = ranOutOfMemory ? 104 : status
 }
 

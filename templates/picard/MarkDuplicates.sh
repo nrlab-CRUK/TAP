@@ -48,6 +48,8 @@
 # If desired, duplicates can be removed using the REMOVE_DUPLICATE and REMOVE_SEQUENCING_DUPLICATES options.
 
 
+set +e  # Don't fail on error
+
 export TMPDIR=temp
 mkdir -p "$TMPDIR"
 

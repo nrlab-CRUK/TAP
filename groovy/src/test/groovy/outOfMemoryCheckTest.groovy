@@ -69,10 +69,12 @@ class OutOfMemoryCheckTest
         def inCode = '0'
         command << inCode
 
+        // Blank line is important as that has caused premature end of log scan.
         commandLog.withPrintWriter
         {
             pw ->
             pw.println("Failed for other reasons.")
+            pw.println()
             pw.println("Same exit code")
         }
 
@@ -90,6 +92,7 @@ class OutOfMemoryCheckTest
         {
             pw ->
             pw.println("Failed because of memory.")
+            pw.println()
             new OutOfMemoryError().printStackTrace(pw)
             pw.println("Exit code 104.")
         }

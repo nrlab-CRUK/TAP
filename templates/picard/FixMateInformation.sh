@@ -2,12 +2,14 @@
 
 # Documentation: http://broadinstitute.github.io/picard/command-line-overview.html#FixMateInformation
 
-# Verify mate-pair information between mates and fix if needed.This tool ensures that
+# Verify mate-pair information between mates and fix if needed. This tool ensures that
 # all mate-pair information is in sync between each read and its mate pair.
 # If no OUTPUT file is supplied then the output is written to a temporary file and
 # then copied over the INPUT file.  Reads marked with the secondary alignment flag
 # are written to the output file unchanged.
 
+
+set +e  # Don't fail on error
 
 export TMPDIR=temp
 mkdir -p "$TMPDIR"

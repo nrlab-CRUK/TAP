@@ -11,6 +11,7 @@
 # avoid collisions by modifying the read group IDs to be unique. For more information about
 # read groups, see the GATK Dictionary entry. (https://www.broadinstitute.org/gatk/guide/article?id=6472)
 
+set +e  # Don't fail on error
 
 export TMPDIR=temp
 mkdir -p "$TMPDIR"

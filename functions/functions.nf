@@ -14,7 +14,16 @@ import java.text.*
  */
 def javaMemMB(task)
 {
-    return task.memory.toMega() - 128
+    def overhead = 64
+    def minimum = 16
+
+    def javaMem = task.memory.toMega() - overhead
+
+    if (javaMem < minimum)
+    {
+        throw new Exception("No memory after taking JVM overhead. Need at least ${overhead + minimum} MB allocated.")
+    }
+    return javaMem
 }
 
 /**

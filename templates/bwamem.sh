@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -eou pipefail
+set -ou pipefail
+set +e  # Don't fail on error
 
 bwa-mem2 mem \
     -t !{task.cpus} \
