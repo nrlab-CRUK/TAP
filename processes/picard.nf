@@ -162,7 +162,7 @@ process mergeOrMarkDuplicates
         javaMem = javaMemMB(task)
         readsInRam = maxReadsInRam(javaMem, 100)
 
-        if (params.MARK_DUPLICATES && !params.CONNOR_COLLAPSING)
+        if (params.MARK_DUPLICATES)
         {
             template "picard/MarkDuplicates.sh"
         }
