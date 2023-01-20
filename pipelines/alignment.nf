@@ -2,7 +2,7 @@
  * BWAmem paired end pipeline inner work flow.
  */
 
-include { safeName } from '../functions/functions'
+include { safeName } from "../modules/nextflow-support/functions"
 include { bwamem2Index } from '../functions/references'
 include { addReadGroups; fixMateInformation } from "../processes/picard"
 

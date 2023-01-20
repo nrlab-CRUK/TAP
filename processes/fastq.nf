@@ -2,7 +2,7 @@
  * Generic FASTQ processes.
  */
 
-include { safeName } from '../functions/functions'
+include { safeName } from "../modules/nextflow-support/functions"
 
  /*
   * Extract the chunk number from a file produced by splitFastq. It is the

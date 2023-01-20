@@ -2,7 +2,7 @@
  * Trimming processes.
  */
 
-include { javaMemMB; safeName } from '../functions/functions'
+include { javaMemMB; safeName } from "../modules/nextflow-support/functions"
 
 def baseName(fastqFile)
 {

@@ -11,6 +11,6 @@ bwa-mem2 mem \
 samtools view \
     -b -h -o "!{outBam}"
 
-groovy "!{projectDir}/groovy/removeInput.groovy" !{params.EAGER_CLEANUP} $? \
+groovy "!{projectDir}/modules/nextflow-support/removeInput.groovy" !{params.EAGER_CLEANUP} $? \
     "!{read1}" \
     "!{read2}"

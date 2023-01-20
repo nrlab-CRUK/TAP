@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -eu
+set -u
+set +e
 
 java -Xms!{javaMem}m -Xmx!{javaMem}m \
     -jar /opt/AGeNT/trimmer.jar \
@@ -11,8 +12,8 @@ java -Xms!{javaMem}m -Xmx!{javaMem}m \
      -minFractionRead !{params.TRIM_MINIMUM_FRACTION_READ} \
      -qualityTrimming !{params.TRIM_QUALITY_THRESHOLD}
 
-groovy "!{projectDir}/groovy/outOfMemoryCheck.groovy" $?
+groovy "!{projectDir}/modules/nextflow-support/outOfMemoryCheck.groovy" $?
 
-groovy "!{projectDir}/groovy/removeInput.groovy" !{params.EAGER_CLEANUP} $? \
+groovy "!{projectDir}/modules/nextflow-support/removeInput.groovy" !{params.EAGER_CLEANUP} $? \
     !{read1In} \
     !{read2In}

@@ -18,7 +18,7 @@ mkdir -p "$TMPDIR"
 
 function clean_up
 {
-    groovy "!{projectDir}/groovy/removeInput.groovy" !{params.EAGER_CLEANUP} $1 !{inBams}
+    groovy "!{projectDir}/modules/nextflow-support/removeInput.groovy" !{params.EAGER_CLEANUP} $1 !{inBams}
 
     rm -rf "$TMPDIR"
     exit $1
@@ -38,6 +38,6 @@ COMPRESSION_LEVEL=5 \
 VALIDATION_STRINGENCY=SILENT \
 TMP_DIR="$TMPDIR"
 
-groovy "!{projectDir}/groovy/outOfMemoryCheck.groovy" $?
+groovy "!{projectDir}/modules/nextflow-support/outOfMemoryCheck.groovy" $?
 
 clean_up $?

@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-set -eu
+set -u
 
 gatk BaseRecalibrator \
     --input "!{inBam}" \

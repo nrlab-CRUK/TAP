@@ -2,7 +2,8 @@
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank
 
-include { sizeOf; sampleIdGenerator } from '../functions/functions'
+include { sizeOf } from "../modules/nextflow-support/functions"
+include { sampleIdGenerator } from '../functions/functions'
 include { extractChunkNumber; splitFastq as splitFastq1; splitFastq as splitFastq2; splitFastq as splitFastqU } from "../processes/fastq"
 include { mergeOrMarkDuplicates } from "../processes/picard"
 

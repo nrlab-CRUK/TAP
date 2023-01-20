@@ -7,7 +7,7 @@ import org.apache.commons.collections4.bag.TreeBag
 import org.apache.commons.csv.*
 import groovy.json.JsonOutput
 
-include { logException } from './debugging'
+include { logException } from '../modules/nextflow-support/debugging'
 include { referenceFasta; bwamem2Index; gatkKnownSites } from './references'
 
 /*

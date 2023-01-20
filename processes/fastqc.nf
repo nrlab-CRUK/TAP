@@ -1,4 +1,4 @@
-include { safeName } from '../functions/functions'
+include { safeName } from "../modules/nextflow-support/functions"
 
 process fastqc
 {

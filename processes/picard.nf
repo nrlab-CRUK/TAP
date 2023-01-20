@@ -6,7 +6,7 @@
 
 import static org.apache.commons.lang3.StringUtils.trimToNull
 
-include { javaMemMB; safeName } from '../functions/functions'
+include { javaMemMB; safeName } from "../modules/nextflow-support/functions"
 
 /**
  * Calculate the maximum number of reads to hold in RAM for Picard sorting

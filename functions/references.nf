@@ -4,7 +4,7 @@
  * otherwise provide the standard under REFERENCE_DATA_ROOT.
  */
 
-include { makeCollection } from './functions'
+include { makeCollection } from "../modules/nextflow-support/functions"
 
 def checkRoot()
 {

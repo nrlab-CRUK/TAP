@@ -2,8 +2,9 @@
 
 nextflow.enable.dsl = 2
 
+include { safeName } from "./modules/nextflow-support/functions"
 include { checkParameters; checkDriverCSV; writePipelineInfo } from './functions/configuration'
-include { unitIdGenerator; safeName } from './functions/functions'
+include { unitIdGenerator } from './functions/functions'
 
 include { chunkFastq; mergeAlignedChunks } from './pipelines/splitAndMerge'
 include { trimming } from './pipelines/trimming'
