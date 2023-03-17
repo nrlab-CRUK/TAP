@@ -6,9 +6,9 @@ set -eu
 # Use makedocker.sh first.
 # See https://stackoverflow.com/a/60316979
 
-TAG="latest"
+TAG="2.0.0"
 REPO="nrlabcruk/nrlabtap:$TAG"
-IMAGE=nrlabtap.sif
+IMAGE=nrlabtap-${TAG}.sif
 
 sudo rm -f $IMAGE
 

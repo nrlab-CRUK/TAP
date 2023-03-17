@@ -1,13 +1,16 @@
 
-version ?= latest
+version ?= 2.0.0
+image ?= nrlabtap-${version}.sif
 
 build:
 	docker build --tag nrlabcruk/nrlabtap:${version} .
 
 release: build
-	docker push nrlabcruk/nrlabtap:${version}
-
+        # Cannot push to Dockerhub because the image contains Agent.
+	# docker push nrlabcruk/nrlabtap:${version}
 
 singularity: build
-	singularity build nrlabtap-${version}.sif docker-daemon://nrlabcruk/nrlabtap:${version}
+	rm -f ${image}
+	singularity build ${image}.sif docker-daemon://nrlabcruk/nrlabtap:${version}
+	chmod a-x ${image}
 
