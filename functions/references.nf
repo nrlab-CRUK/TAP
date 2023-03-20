@@ -56,6 +56,20 @@ def bowtie2Index()
     }
 }
 
+def bwamethIndex()
+{
+    params.with
+    {
+        if (BWAMETH_INDEX)
+        {
+            return BWAMETH_INDEX
+        }
+
+        checkRoot()
+        return "${REFERENCE_ROOT}/${ASSEMBLY}/bwameth-0.2.6/${ASSEMBLY}"
+    }
+}
+
 def gatkKnownSites()
 {
     def sites = null

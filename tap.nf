@@ -27,14 +27,22 @@ switch (params.ALIGNER.toLowerCase())
 {
     case 'bwamem':
     case 'bwa_mem':
+    case 'bwa-mem':
     case 'bwamem2':
     case 'bwa_mem2':
+    case 'bwa-mem2':
         include { bwamem2WF as alignment } from "./pipelines/alignment/bwamem2"
         break
 
     case 'bowtie':
     case 'bowtie2':
         include { bowtie2WF as alignment } from "./pipelines/alignment/bowtie2"
+        break
+
+    case 'bwameth':
+    case 'bwa-meth':
+    case 'bwa_meth':
+        include { bwamethWF as alignment } from "./pipelines/alignment/bwameth"
         break
 
     default:
