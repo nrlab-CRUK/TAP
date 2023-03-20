@@ -42,6 +42,20 @@ def bwamem2Index()
     }
 }
 
+def bowtie2Index()
+{
+    params.with
+    {
+        if (BOWTIE2_INDEX)
+        {
+            return BOWTIE2_INDEX
+        }
+
+        checkRoot()
+        return "${REFERENCE_ROOT}/${ASSEMBLY}/bowtie2-2.5.1/${ASSEMBLY}"
+    }
+}
+
 def gatkKnownSites()
 {
     def sites = null

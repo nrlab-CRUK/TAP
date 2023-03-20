@@ -1,4 +1,4 @@
-name: nrlab_tap
+name: tap
 channels:
   - conda-forge
   - bioconda

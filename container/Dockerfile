@@ -15,15 +15,15 @@ RUN curl https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-x
     sh miniconda3.sh -b -p /opt/conda && \
     rm miniconda3.sh
 
-COPY nrlab_tap.yml connor.yml ./
-RUN /opt/conda/bin/conda env create -f nrlab_tap.yml
+COPY tap.yml connor.yml ./
+RUN /opt/conda/bin/conda env create -f tap.yml
 RUN /opt/conda/bin/conda env create -f connor.yml
 
 RUN /opt/conda/bin/conda clean -a
 
 # create symbolic link to the directory containing the ichorCNA reference data
 # files which contains a version number
-RUN ln -s /opt/conda/envs/nrlab_tap/share/r-ichorcna-* /opt/conda/envs/nrlab_tap/share/r-ichorcna
+RUN ln -s /opt/conda/envs/tap/share/r-ichorcna-* /opt/conda/envs/tap/share/r-ichorcna
 
 # There is no groovy in conda
 
@@ -38,4 +38,4 @@ RUN ln -s /opt/AGeNT/trimmer-${AGENT_VERSION}.jar /opt/AGeNT/trimmer.jar
 
 ENV JAVA_HOME /usr/lib/jvm/jre-17
 ENV GROOVY_HOME /opt/groovy-${GROOVY_VERSION}
-ENV PATH ${JAVA_HOME}/bin:${GROOVY_HOME}/bin:/opt/conda/envs/nrlab_tap/bin:/opt/conda/envs/connor/bin:$PATH
+ENV PATH ${JAVA_HOME}/bin:${GROOVY_HOME}/bin:/opt/conda/envs/tap/bin:/opt/conda/envs/connor/bin:$PATH

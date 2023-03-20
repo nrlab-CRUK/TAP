@@ -8,7 +8,7 @@ include { unitIdGenerator } from './functions/functions'
 
 include { chunkFastq; mergeAlignedChunks } from './pipelines/splitAndMerge'
 include { trimming } from './pipelines/trimming'
-include { alignment } from './pipelines/alignment'
+include { postAlignment } from './pipelines/alignment/postAlignment'
 include { gatk } from './pipelines/gatk'
 include { fastqc } from './processes/fastqc'
 include { publish; checksum } from './processes/finishing'
@@ -21,6 +21,24 @@ if (!checkParameters(params))
 if (!checkDriverCSV(params))
 {
     exit 1
+}
+
+switch (params.ALIGNER.toLowerCase())
+{
+    case 'bwamem':
+    case 'bwa_mem':
+    case 'bwamem2':
+    case 'bwa_mem2':
+        include { bwamem2WF as alignment } from "./pipelines/alignment/bwamem2"
+        break
+
+    case 'bowtie':
+    case 'bowtie2':
+        include { bowtie2WF as alignment } from "./pipelines/alignment/bowtie2"
+        break
+
+    default:
+        exit 1, "Aligner must be one of 'bwamem2', 'bowtie2' or 'bwameth'."
 }
 
 /*
@@ -38,9 +56,10 @@ workflow
     chunkFastq(csvChannel)
     trimming(chunkFastq.out.fastqChannel, csvChannel)
 
-    alignment(trimming.out, csvChannel)
+    alignment(trimming.out)
+    postAlignment(alignment.out, csvChannel)
 
-    mergeAlignedChunks(alignment.out, csvChannel, chunkFastq.out.chunkCountChannel)
+    mergeAlignedChunks(postAlignment.out, csvChannel, chunkFastq.out.chunkCountChannel)
 
     gatk(mergeAlignedChunks.out)
 
