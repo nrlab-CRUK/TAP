@@ -7,7 +7,9 @@ dependencies:
   - conda-forge::python>=3.6
   - conda-forge::mysql-connector-python>=8.0
   - bioconda::bedtools=2.30.0
+  - bioconda::bowtie2=2.5.1
   - bioconda::bwa-mem2=2.2.1
+  - bioconda::bwameth=0.2.6
   - bioconda::fastqc=0.11.9
   - bioconda::gatk4=4.2.6.1
   - bioconda::picard=2.27.4

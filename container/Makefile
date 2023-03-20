@@ -1,5 +1,5 @@
 
-version ?= 2.0.0
+version ?= 2.1.0
 image ?= nrlabtap-${version}.sif
 
 build:
@@ -11,6 +11,6 @@ release: build
 
 singularity: build
 	rm -f ${image}
-	singularity build ${image}.sif docker-daemon://nrlabcruk/nrlabtap:${version}
+	singularity build ${image} docker-daemon://nrlabcruk/nrlabtap:${version}
 	chmod a-x ${image}
 
