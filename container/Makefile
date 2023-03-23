@@ -14,3 +14,6 @@ singularity: build
 	singularity build ${image} docker-daemon://nrlabcruk/nrlabtap:${version}
 	chmod a-x ${image}
 
+deploy: singularity
+	scp ${image} clust1-headnode:/mnt/scratcha/bioinformatics/rosenfeld_containers
+
