@@ -336,8 +336,8 @@ workflow trimming
         trimOut = withSampleInfoChannel.branch
         {
             unitId, chunk, read1, read2, hasUMI, readU, info ->
-            tagtrim : info['LibraryPrep'] in ['Thruplex_Tag_seq', 'Thruplex_Tag_seq_HV']
-            agentTrimmer : info['LibraryPrep'] == 'Agilent_XTHS2'
+            tagtrim : params.TRIM_FASTQ && info['LibraryPrep'] in ['Thruplex_Tag_seq', 'Thruplex_Tag_seq_HV']
+            agentTrimmer : params.TRIM_FASTQ && info['LibraryPrep'] == 'Agilent_XTHS2'
             trimGalore : params.TRIM_FASTQ
             noTrim : true
         }
