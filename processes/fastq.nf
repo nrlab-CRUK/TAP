@@ -20,9 +20,9 @@ include { safeName } from "../modules/nextflow-support/functions"
  */
 process splitFastq
 {
-    memory 8.MB
+    memory { 64.MB * task.attempt }
     time { 12.hour * task.attempt}
-    maxRetries 1
+    maxRetries 2
 
     input:
         tuple val(unitId), val(read), path(fastqFile)
