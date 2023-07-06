@@ -5,8 +5,7 @@ import unittest
 from shutil import rmtree
 from types import SimpleNamespace
 
-from FastqSplit import FastqSplit
-from pip._vendor.html5lib.constants import EOF
+from FastqSplit import FastqSplit, CorruptedFileException
 
 class TagTrim2Test(unittest.TestCase):
     def setUp(self):
@@ -18,17 +17,25 @@ class TagTrim2Test(unittest.TestCase):
 
     def tearDown(self):
         rmtree(self.outDir)
+        pass
 
-    def BROKENtestSplitTruncated(self):
+    def testSplitTruncated(self):
         splitter = FastqSplit()
         args = SimpleNamespace(**{
             'source': self.truncatedFile,
             'out': self.outDir,
-            'reads': 500,
+            'reads': 5,
             'prefix': 'trunctest'
         })
 
-        splitter.run(args)
+        try:
+            splitter.run(args)
+            self.fail("Read corrupted file without getting an exception.")
+        except CorruptedFileException:
+            chunks = os.listdir(self.outDir)
+            self.assertEqual(2, len(chunks), "Expect the corrupted file to have returned two chunks.")
+            self.assertIn('trunctest-C000000.fq.gz', chunks, 'Missing chunk 0.')
+            self.assertIn('trunctest-C000001.fq.gz', chunks, 'Missing chunk 1.')
 
     def testReadTruncated(self):
         try:
