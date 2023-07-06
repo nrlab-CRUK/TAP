@@ -2,6 +2,7 @@
 
 import argparse
 import gzip
+import logging
 import os
 import pysam
 import re
@@ -21,8 +22,9 @@ class FastqSplit:
 
         self.openFileHandle = None
 
-    def run(self):
-        args = self.parser.parse_args()
+    def run(self, args = None) -> int:
+        if not args:
+            args = self.parser.parse_args()
 
         self.perChunk = args.reads
 
@@ -56,13 +58,17 @@ class FastqSplit:
                     if self.openFileHandle is not None:
                         self.openFileHandle.close()
                         self.openFileHandle = None
-
+        except EOFError as e:
+            logging.error(f"Looks like the file {args.source} is truncated or corrupted.")
+            logging.error(e.args[0])
+            return 1
         except StopIteration:
             if readCounter == 0:
                 # No reads at all. In this case, write a single chunk with nothing in it.
                 # Just open the file and close it.
                 with self.fileHandle(0) as outFile:
                     pass
+        return 0
 
     def fileHandle(self, readCounter: int):
         if (readCounter % self.perChunk) == 0:
@@ -79,4 +85,4 @@ class FastqSplit:
 
 
 if __name__ == '__main__':
-    FastqSplit().run()
+    sys.exit(FastqSplit().run())
