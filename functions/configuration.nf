@@ -139,6 +139,14 @@ def checkDriverCSV(params)
                     log.error "No 'Read2' file name set on line ${rowNum}."
                     ok = false
                 }
+                if (record.get('SequencingDate'))
+                {
+                    if (!(record.get('SequencingDate') ==~ /\d{4}-\d{2}-\d{2}/))
+                    {
+                        log.error "'SequencingDate' is in the wrong format on line ${rowNum}. Must be ISO 8601 (yyyy-mm-dd)."
+                        ok = false
+                    }
+                }
 
                 unitIds << params.UNIT_ID_PARTS.collect { record.get(it) }.join(params.UNIT_ID_SEPARATOR)
             }
