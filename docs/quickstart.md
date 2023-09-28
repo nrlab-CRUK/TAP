@@ -99,17 +99,17 @@ The pipeline is configured to use both these locations by default.
 
 ## Retrieve FASTQ files for a given sequencing run
 
-We recommend use of the `kickstart` tool, provided by the Bioinformatics Core as
-part of the Genomic Sequencing service, for retrieving your FASTQ sequence data
-files.
+We use a download tool that fetches information from the CRUK-CI Clarity sequencing LIMS system and the Rosenfeld group's sample tracking database to form driver files for the Trim and Align Pipeline (TAP) and downstream processing. It also fetches sequenced FASTQ files from the CRUK-CI sequencing file store.
 
-Note that `kickstart` is a Java tool that requires Java 17 or later.
+More details about the download tool can be found in [TAP_Tools Github Repository](https://github.com/nrlab-CRUK/TAP_Tools/tree/master).
+
+Note that the download tool is a Java tool that requires Java 17 or later.
 
 Create or navigate to a directory in which the pipeline will be run and run the
 following command to fetch the sequence data for a specified SLX pool ID:
 
 ```
-/home/bioinformatics/software/pipelines/kickstart/current/bin/kickstart -m MiSeq -f "Library Type" -f "Index Type" -l SLX-21619
+/scratcha/nrlab/TAP_resources/tools/taptools-1.0-SNAPSHOT/bin/download -m MiSeq -l SLX-21619
 ```
 
 Note that we restricted the FASTQ files to just the MiSeq Nano QC run using the
@@ -118,19 +118,14 @@ pipeline. You wouldn't normally want to do this and for sequencing projects in
 which a MiSeq QC run was carried out, you may wish to specify `-m NovaSeq`
 instead.
 
-The `kickstart` utility also produces a CSV file, `alignment.csv`, that lists
-the FASTQ files, normally one for each library in the pool, and contains some
-metadata about each library including the library type and index type, as
-requested with the `-f` flag. The FASTQ files are transferred to a subdirectory
-named `fastq`. The CSV file and `fastq` directory are the inputs for the
-pipeline.
+The application writes the files `alignment.csv` and `nextflow.config` in the working directory. `alignment.csv` lists the information fetched from Clarity for each file or file pair; `nextflow.config` provides a basis for configuring our Nextflow alignment pipeline.
 
 ## Configuring the pipeline
 
 The pipeline can be configured with a number of parameters. Default settings
 for many of these parameters will be appropriate for many runs and only the
 parameters that need to be changed have to be specified in a configuration
-file named `nrlab_tap.config` in your run directory.
+file named `nextflow.config` in your run directory.
 
 Here is an example configuration file:
 
