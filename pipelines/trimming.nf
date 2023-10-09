@@ -78,6 +78,28 @@ process agentTrimmer
         template "trimming/agentTrimmer.sh"
 }
 
+process trimmomatic
+{
+    cpus   16
+    memory 1.GB
+    time { 12.hour * task.attempt }
+    maxRetries 1
+
+    input:
+        tuple val(unitId), val(chunk), path(read1In), path(read2In)
+
+    output:
+        tuple val(unitId), val(chunk), path(read1Out), path(read2Out)
+
+    shell:
+        javaMem = javaMemMB(task)
+        outFilePrefix = "${safeName(unitId)}.c_${chunk}"
+        read1Out = "${outFilePrefix}_R1.fastq.gz"
+        read2Out = "${outFilePrefix}_R2.fastq.gz"
+
+        template "trimming/trimmomatic.sh"
+}
+
 process prependXTHS2UMI
 {
     memory { 1.GB * task.attempt }
@@ -257,7 +279,7 @@ workflow agentTrimmerWF
                 tuple unitId, chunk, read1, read2
             })
 
-        // only prepend the extracted UMT from AGeNT trimmer if Connor
+        // only prepend the extracted UMI from AGeNT trimmer if Connor
         // deduplication is requested
 
         prepended = trimmed.branch
@@ -275,6 +297,24 @@ workflow agentTrimmerWF
 
     emit:
         trimmedChannel
+}
+
+workflow trimmomaticWF
+{
+    take:
+        fastqChannel
+
+    main:
+        trimmed = trimmomatic(
+            fastqChannel
+            .map
+            {
+                unitId, chunk, read1, read2, hasUmi, readU, info ->
+                tuple unitId, chunk, read1, read2
+            })
+
+    emit:
+        trimmed
 }
 
 workflow noTrimWF
@@ -336,8 +376,9 @@ workflow trimming
         trimOut = withSampleInfoChannel.branch
         {
             unitId, chunk, read1, read2, hasUMI, readU, info ->
-            tagtrim : params.TRIM_FASTQ && info['LibraryPrep'] in ['Thruplex_Tag_seq', 'Thruplex_Tag_seq_HV']
+            tagtrim : params.TRIM_FASTQ && info['LibraryPrep'] == 'Thruplex_Tag_seq'
             agentTrimmer : params.TRIM_FASTQ && info['LibraryPrep'] == 'Agilent_XTHS2'
+            trimmomatic : params.TRIM_FASTQ && info['LibraryPrep'] == 'Thruplex_Tag_seq_HV'
             trimGalore : params.TRIM_FASTQ
             noTrim : true
         }
@@ -345,9 +386,10 @@ workflow trimming
         trimGaloreWF(trimOut.trimGalore)
         tagtrimWF(trimOut.tagtrim)
         agentTrimmerWF(trimOut.agentTrimmer)
+        trimmomaticWF(trimOut.trimmomatic)
         noTrimWF(trimOut.noTrim)
 
-        afterTrimmingChannel = noTrimWF.out.mix(trimGaloreWF.out).mix(tagtrimWF.out).mix(agentTrimmerWF.out)
+        afterTrimmingChannel = noTrimWF.out.mix(trimGaloreWF.out).mix(tagtrimWF.out).mix(agentTrimmerWF.out).mix(trimmomaticWF.out)
 
     emit:
         afterTrimmingChannel

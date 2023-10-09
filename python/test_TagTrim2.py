@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
 
-from collections import namedtuple
-
 import unittest
 
-from pysam import FastxRecord
+from collections import namedtuple
 
-from unittest.mock import MagicMock
-from unittest.mock import mock_open
-from unittest.mock import patch
+from pysam import FastxRecord
 
 from TagTrim2 import TagTrim2
 
@@ -186,6 +182,3 @@ class TagTrim2Test(unittest.TestCase):
         record.sequence = b
         record.quality = q
         return record
-
-if __name__ == '__main__':
-    unittest.main()

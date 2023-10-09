@@ -27,7 +27,7 @@ RUN ln -s /opt/conda/envs/tap/share/r-ichorcna-* /opt/conda/envs/tap/share/r-ich
 
 # There is no groovy in conda
 
-ARG GROOVY_VERSION=4.0.7
+ARG GROOVY_VERSION=4.0.12
 RUN wget -O /tmp/groovy.zip https://groovy.jfrog.io/artifactory/dist-release-local/groovy-zips/apache-groovy-binary-${GROOVY_VERSION}.zip && \
     unzip -d /opt /tmp/groovy.zip && \
     rm -f /tmp/groovy.zip
@@ -35,6 +35,8 @@ RUN wget -O /tmp/groovy.zip https://groovy.jfrog.io/artifactory/dist-release-loc
 ARG AGENT_VERSION=3.0.5
 COPY AGeNT/trimmer-${AGENT_VERSION}.jar /opt/AGeNT/
 RUN ln -s /opt/AGeNT/trimmer-${AGENT_VERSION}.jar /opt/AGeNT/trimmer.jar
+
+RUN wget -O /opt/TruSeq3-PE-2with_rcUMI.fa https://takarabio.com/resourcedocument/x108592
 
 ENV JAVA_HOME /usr/lib/jvm/jre-17
 ENV GROOVY_HOME /opt/groovy-${GROOVY_VERSION}
