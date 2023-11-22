@@ -20,10 +20,9 @@ def extract_umi(record: FastxRecord):
     sequence = None
     quality = None
     for value in record.comment.split("\t"):
-        if value.startswith("RX:Z:"):
-            sequence = value.removeprefix("RX:Z:")
-        elif value.startswith("QX:Z:"):
-            quality = value.removeprefix("QX:Z:")
+        # removeprefix requires Python 3.9, which would do this work.
+        if value.startswith("RX:Z:") or value.startswith("QX:Z:"):
+            sequence = value[5:]
     if sequence is None:
         sys.exit("UMI sequence not found for record: " + record.name + " " + record.comment)
     if quality is None:
