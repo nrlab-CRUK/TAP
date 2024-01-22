@@ -2,8 +2,8 @@ include { safeName } from "../modules/nextflow-support/functions"
 
 process fastqc
 {
-    memory 500.MB
-    time   6.hour
+    memory 2.GB
+    time   12.hour
 
     publishDir params.REPORTS_DIR, mode: 'link', pattern: '*.html'
 
