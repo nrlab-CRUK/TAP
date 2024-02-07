@@ -8,7 +8,8 @@ bwa-mem2 mem \
     -t !{task.cpus} \
     "!{bwamem2IndexDir}/!{bwamem2IndexPrefix}" \
     "!{read1}" \
-    "!{read2}" | \
+    "!{read2}" \
+    "-I 167,1000" | \
 samtools view \
     -b -h -o "!{outBam}"
 
