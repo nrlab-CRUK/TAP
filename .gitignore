@@ -1,8 +1,12 @@
 .DS_Store
 .project
 .pydevproject
+*.Rproj
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
 target
+
+*.sif
+__pycache__
