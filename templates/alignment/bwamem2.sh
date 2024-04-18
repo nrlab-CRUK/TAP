@@ -4,12 +4,11 @@ set -ou pipefail
 set +e  # Don't fail on error
 
 bwa-mem2 mem \
-    !{params.BWAMEM2_OPTIONS} \
     -t !{task.cpus} \
     "!{bwamem2IndexDir}/!{bwamem2IndexPrefix}" \
     "!{read1}" \
     "!{read2}" \
-    "-I 167,1000" | \
+    "!{params.BWAMEM2_OPTIONS}" \ | \
 samtools view \
     -b -h -o "!{outBam}"
 
