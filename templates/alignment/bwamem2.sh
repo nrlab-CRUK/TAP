@@ -8,7 +8,7 @@ bwa-mem2 mem \
     "!{bwamem2IndexDir}/!{bwamem2IndexPrefix}" \
     "!{read1}" \
     "!{read2}" \
-    "!{params.BWAMEM2_OPTIONS}" \ | \
+    "!{params.BWAMEM2_OPTIONS}" | \
 samtools view \
     -b -h -o "!{outBam}"
 
