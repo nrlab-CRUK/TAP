@@ -6,7 +6,7 @@
 
 import static org.apache.commons.lang3.StringUtils.trimToNull
 
-include { javaMemMB; safeName } from "../modules/nextflow-support/functions"
+include { javaMemoryOptions; safeName } from "../modules/nextflow-support/functions"
 
 /**
  * Calculate the maximum number of reads to hold in RAM for Picard sorting
@@ -88,7 +88,7 @@ process addReadGroups
 
     shell:
         outBam = "${safeName(unitId)}.readgroups.c_${chunk}.bam"
-        javaMem = javaMemMB(task)
+        javaMem = javaMemoryOptions(task)
 
         def rgcn = trimToNull(sequencingInfo['SequencingCentre'])
         RGCN = !rgcn ? "" : "RGCN=\"${rgcn}\""
@@ -132,7 +132,7 @@ process fixMateInformation
 
     shell:
         outBam = "${safeName(unitId)}.fixed.c_${chunk}.bam"
-        javaMem = javaMemMB(task)
+        javaMem = javaMemoryOptions(task)
         readsInRam = maxReadsInRam(javaMem, 100)
 
         template "picard/FixMateInformation.sh"
@@ -159,7 +159,7 @@ process mergeOrMarkDuplicates
         outBam = "${safeUnitId}.bam"
         outBai = "${safeUnitId}.bai"
         metrics = "${safeUnitId}.duplication.txt"
-        javaMem = javaMemMB(task)
+        javaMem = javaMemoryOptions(task)
         readsInRam = maxReadsInRam(javaMem, 100)
 
         if (params.MARK_DUPLICATES && !params.CONNOR_COLLAPSING)

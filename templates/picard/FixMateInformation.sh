@@ -25,7 +25,7 @@ function clean_up
 trap clean_up SIGHUP SIGINT SIGTERM
 
 picard -Djava.io.tmpdir="$TMPDIR" \
--Xms!{javaMem}m -Xmx!{javaMem}m \
+!{javaMem} \
 FixMateInformation \
 INPUT=!{inBam} \
 OUTPUT="!{outBam}" \

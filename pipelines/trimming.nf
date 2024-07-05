@@ -2,7 +2,7 @@
  * Trimming processes.
  */
 
-include { javaMemMB; safeName } from "../modules/nextflow-support/functions"
+include { javaMemoryOptions; safeName } from "../modules/nextflow-support/functions"
 
 def baseName(fastqFile)
 {
@@ -69,7 +69,7 @@ process agentTrimmer
         tuple val(unitId), val(chunk), path(read1Out), path(read2Out)
 
     shell:
-        javaMem = javaMemMB(task)
+        javaMem = javaMemoryOptions(task)
         outFilePrefix = "${safeName(unitId)}.c_${chunk}"
         read1Out = "${outFilePrefix}_R1.fastq.gz"
         read2Out = "${outFilePrefix}_R2.fastq.gz"
@@ -92,7 +92,7 @@ process trimmomatic
         tuple val(unitId), val(chunk), path(read1Out), path(read2Out)
 
     shell:
-        javaMem = javaMemMB(task)
+        javaMem = javaMemoryOptions(task)
         outFilePrefix = "${safeName(unitId)}.c_${chunk}"
         read1Out = "${outFilePrefix}_R1.fastq.gz"
         read2Out = "${outFilePrefix}_R2.fastq.gz"

@@ -3,7 +3,7 @@
 set -u
 set +e
 
-java -Xms!{javaMem}m -Xmx!{javaMem}m \
+java !{javaMem} \
     -jar /opt/AGeNT/trimmer.jar \
      -fq1 "!{read1In}" \
      -fq2 "!{read2In}" \

@@ -3,7 +3,8 @@
 set -o
 set +e
 
-trimmomatic -Xms!{javaMem}m -Xmx!{javaMem}m PE \
+trimmomatic !{javaMem} \
+    PE \
     -threads !{task.cpus} -phred33 \
     "!{read1In}" "!{read2In}" \
     "!{read1Out}" unpaired1.fq.gz \
