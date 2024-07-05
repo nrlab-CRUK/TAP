@@ -8,26 +8,24 @@ RUN dnf install -y dnf-plugins-core epel-release && \
 
 # Conda
 
-ARG CONDA_VERSION=py39_4.12.0
+ARG MINIFORGE_VERSION=24.3.0-0
 
-RUN curl https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-x86_64.sh -o miniconda3.sh && \
+RUN curl -L -O https://github.com/conda-forge/miniforge/releases/download/${MINIFORGE_VERSION}/miniforge3-linux-x86_64.sh && \
     mkdir -p /opt && \
-    sh miniconda3.sh -b -p /opt/conda && \
-    rm miniconda3.sh
+    sh miniforge3-linux-x86_64.sh -b -p /opt/miniforge3 && \
+    rm miniforge3-linux-x86_64.sh
 
 COPY tap.yml connor.yml ./
-RUN /opt/conda/bin/conda env create -f tap.yml
-RUN /opt/conda/bin/conda env create -f connor.yml
-
-RUN /opt/conda/bin/conda clean -a
+RUN /opt/miniforge3/bin/mamba env create -f tap.yml && /opt/miniforge3/bin/mamba clean -a
+RUN /opt/miniforge3/bin/mamba env create -f connor.yml && /opt/miniforge3/bin/mamba clean -a
 
 # create symbolic link to the directory containing the ichorCNA reference data
 # files which contains a version number
-RUN ln -s /opt/conda/envs/tap/share/r-ichorcna-* /opt/conda/envs/tap/share/r-ichorcna
+RUN ln -s /opt/miniforge3/envs/tap/share/r-ichorcna-* /opt/miniforge3/envs/tap/share/r-ichorcna
 
 # There is no groovy in conda
 
-ARG GROOVY_VERSION=4.0.15
+ARG GROOVY_VERSION=4.0.21
 RUN wget -O /tmp/groovy.zip https://groovy.jfrog.io/artifactory/dist-release-local/groovy-zips/apache-groovy-binary-${GROOVY_VERSION}.zip && \
     unzip -d /opt /tmp/groovy.zip && \
     rm -f /tmp/groovy.zip
@@ -40,4 +38,4 @@ RUN wget -O /opt/TruSeq3-PE-2with_rcUMI.fa https://takarabio.com/resourcedocumen
 
 ENV JAVA_HOME /usr/lib/jvm/jre-17
 ENV GROOVY_HOME /opt/groovy-${GROOVY_VERSION}
-ENV PATH ${JAVA_HOME}/bin:${GROOVY_HOME}/bin:/opt/conda/envs/tap/bin:/opt/conda/envs/connor/bin:$PATH
+ENV PATH ${JAVA_HOME}/bin:${GROOVY_HOME}/bin:/opt/miniforge3/envs/tap/bin:/opt/miniforge3/envs/connor/bin:$PATH

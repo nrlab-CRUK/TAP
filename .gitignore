@@ -1,6 +1,7 @@
 .DS_Store
 .project
 .pydevproject
+.settings
 *.Rproj
 .Rproj.user
 .Rhistory
@@ -10,3 +11,5 @@ target
 
 *.sif
 __pycache__
+venv
+**/venv

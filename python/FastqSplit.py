@@ -9,6 +9,8 @@ import re
 import sys
 import traceback
 
+from xopen import xopen
+
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
 
 class CorruptedFileException(Exception):
@@ -33,7 +35,7 @@ class FastqSplit:
 
         self.openFileHandle = None
 
-    def run(self, args = None):
+    def run(self, args = None, quiet = False):
         if not args:
             args = self.parser.parse_args()
 
@@ -42,34 +44,35 @@ class FastqSplit:
         self.outdir = args.out if args.out else os.getcwd()
         self.prefix = args.prefix if args.prefix else re.search(r"(?i)^(.+?)(\.(fq|fastq))?(\.gz)?$", os.path.basename(args.source)).group(1)
 
-        print("FastqSplit")
-        print("----------")
-        print(f"source: {args.source}")
-        print(f"out directory: {self.outdir}")
-        print(f"out prefix: {self.prefix}")
-        print(f"chunk size: {self.perChunk}")
-        print(f"compression: {self.compressionLevel}")
+        if not quiet:
+            print("FastqSplit")
+            print("----------")
+            print(f"source: {args.source}")
+            print(f"out directory: {self.outdir}")
+            print(f"out prefix: {self.prefix}")
+            print(f"chunk size: {self.perChunk}")
+            print(f"compression: {self.compressionLevel}")
 
         readCounter = 0
         try:
-            with gzip.open(args.source, "rt") as readHandle:
+            with xopen(args.source, 'rt') as readHandle:  # 'rt' mode for text mode reading
                 readIter = FastqGeneralIterator(readHandle)
                 try:
                     while True:
-                        read = next(readIter)
+                        (id, seq, qual) = next(readIter)
 
                         outFile = self.fileHandle(readCounter)
 
                         outFile.write('@')
-                        outFile.write(read[0])
+                        outFile.write(id)
                         outFile.write('\n')
-                        outFile.write(read[1])
+                        outFile.write(seq)
                         outFile.write('\n')
                         outFile.write('+\n')
-                        outFile.write(read[2])
+                        outFile.write(qual)
                         outFile.write('\n')
 
-                        readCounter = readCounter + 1
+                        readCounter += 1
                 finally:
                     if self.openFileHandle is not None:
                         self.openFileHandle.close()
