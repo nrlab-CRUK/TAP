@@ -64,7 +64,7 @@ function clean_up
 trap clean_up SIGHUP SIGINT SIGTERM
 
 picard -Djava.io.tmpdir="$TMPDIR" \
-!{javaMem} \
+!{javaMem.jvmOpts} \
 MarkDuplicates \
 !{'INPUT=' + inBams.join(' INPUT=')} \
 OUTPUT="!{outBam}" \

@@ -69,7 +69,7 @@ process agentTrimmer
         tuple val(unitId), val(chunk), path(read1Out), path(read2Out)
 
     shell:
-        javaMem = javaMemoryOptions(task)
+        javaMem = javaMemoryOptions(task).jvmOpts
         outFilePrefix = "${safeName(unitId)}.c_${chunk}"
         read1Out = "${outFilePrefix}_R1.fastq.gz"
         read2Out = "${outFilePrefix}_R2.fastq.gz"
@@ -92,7 +92,7 @@ process trimmomatic
         tuple val(unitId), val(chunk), path(read1Out), path(read2Out)
 
     shell:
-        javaMem = javaMemoryOptions(task)
+        javaMem = javaMemoryOptions(task).jvmOpts
         outFilePrefix = "${safeName(unitId)}.c_${chunk}"
         read1Out = "${outFilePrefix}_R1.fastq.gz"
         read2Out = "${outFilePrefix}_R2.fastq.gz"

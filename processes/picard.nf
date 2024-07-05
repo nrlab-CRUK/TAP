@@ -133,7 +133,7 @@ process fixMateInformation
     shell:
         outBam = "${safeName(unitId)}.fixed.c_${chunk}.bam"
         javaMem = javaMemoryOptions(task)
-        readsInRam = maxReadsInRam(javaMem, 100)
+        readsInRam = maxReadsInRam(javaMem.heap, 100)
 
         template "picard/FixMateInformation.sh"
 }
@@ -160,7 +160,7 @@ process mergeOrMarkDuplicates
         outBai = "${safeUnitId}.bai"
         metrics = "${safeUnitId}.duplication.txt"
         javaMem = javaMemoryOptions(task)
-        readsInRam = maxReadsInRam(javaMem, 100)
+        readsInRam = maxReadsInRam(javaMem.heap, 100)
 
         if (params.MARK_DUPLICATES && !params.CONNOR_COLLAPSING)
         {
