@@ -53,28 +53,28 @@ class UMIIntoHeader:
                     with gzip.open(args.out, "wt", compresslevel = self.compressionLevel, newline = '\n') as outFile:
                         readIter = FastqGeneralIterator(readHandle)
                         umiIter = FastqGeneralIterator(umiHandle)
-                        
+
                         for (readId, readSeq, readQual) in readIter:
                             (umiId, umiSeq, umiQual) = next(umiIter)
-                            
+
                             readIdParts = readId.split()
                             assert len(readIdParts) == 2, "Expect the read id to have two parts when split by white space."
-                            
+
                             umiIdParts = umiId.split()
                             assert len(umiIdParts) == 2, "Expect the UMI read id to have two parts when split by white space."
-                            
+
                             if readIdParts[0] != umiIdParts[0]:
                                 raise CorruptedFileException(f"Have mismatched reads on line {lineCounter + 1} of the two read files.")
-                            
+
                             outFile.write(f"@{readIdParts[0]}:{umiSeq} {readIdParts[1]}\n")
                             outFile.write(readSeq)
                             outFile.write('\n')
                             outFile.write('+\n')
                             outFile.write(readQual)
                             outFile.write('\n')
-    
+
                             lineCounter += 4
-                            
+
         except EOFError as e:
             raise CorruptedFileException(f"Looks like the file {args.read} or {args.umi} is truncated or corrupted: \"{e.args[0]}\"")
         except StopIteration:

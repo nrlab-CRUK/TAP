@@ -28,12 +28,12 @@ class UMIIntoHeaderTest(unittest.TestCase):
         })
 
         rewriter.run(args, quiet = True)
-        
+
         self.assertTrue(os.path.exists(self.outFile), "Out file not written.")
-        
+
         with xopen(self.outFile, 'rt') as file:  # 'rt' mode for text mode reading
             lines = [line.rstrip() for line in file]
-        
+
         self.assertEqual("@M01686:2:000000000-DFTML:1:1101:14364:1532:ACTTTATGGT 1:N:0:GTCTGTCA", lines[0], "First read id wrong.");
         self.assertEqual("@M01686:2:000000000-DFTML:1:1101:17133:1546:TGTCGCGCGG 1:N:0:GTCTGTCA", lines[4], "Second read id wrong.");
 
