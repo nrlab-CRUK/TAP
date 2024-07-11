@@ -6,7 +6,6 @@ include { safeName } from "./modules/nextflow-support/functions"
 include { checkParameters; checkDriverCSV; writePipelineInfo } from './functions/configuration'
 include { unitIdGenerator } from './functions/functions'
 
-include { preprocessingWF as preprocessing } from './pipelines/preprocessing'
 include { chunkFastq; mergeAlignedChunks } from './pipelines/splitAndMerge'
 include { trimming } from './pipelines/trimming'
 include { postAlignment } from './pipelines/alignment/postAlignment'
@@ -62,8 +61,7 @@ workflow
 
     writePipelineInfo(file("${workDir}/latest_pipeline_info.json"), params)
 
-    preprocessing(csvChannel)
-    chunkFastq(preprocessing.out)
+    chunkFastq(csvChannel)
     /*
     trimming(chunkFastq.out.fastqChannel, csvChannel)
 

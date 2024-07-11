@@ -12,32 +12,46 @@ include { mergeOrMarkDuplicates } from "../processes/picard"
  * Workflow to split the FASTQ reads into chunks and emit a channel of
  * per sample per chunk files for trimming and then alignment.
  *
- * In: the FASTQ channel (unitId, read1, read2)
+ * In: the CSV channel (unitId, row)
  *
  * Out: channel (unitId, chunk, read1, read2)
  */
 workflow chunkFastq
 {
     take:
-        fastqChannel
+        csvChannel
 
     main:
         // Split into two channels, one read in each, for fastq splitting.
+        // If there is a UMI read, this is passed to the splitter too. That program
+        // puts the UMI in the read header from the extra file.
 
         read1Channel =
-            fastqChannel
+            csvChannel
             .map
             {
-                unitId, read1, read2 ->
-                tuple unitId, 1, read1
+                unitId, info ->
+                def theseReads = []
+                theseReads << file("${params.FASTQ_DIR}/${info.Read1}", checkIfExists: true)
+                if (isNotBlank(info.UmiRead))
+                {
+                    theseReads << file("${params.FASTQ_DIR}/${info.UmiRead}", checkIfExists: true)
+                }
+                tuple unitId, 1, theseReads
             }
 
         read2Channel =
-            fastqChannel
+            csvChannel
             .map
             {
-                unitId, read1, read2 ->
-                tuple unitId, 2, read2
+                unitId, info ->
+                def theseReads = []
+                theseReads << file("${params.FASTQ_DIR}/${info.Read2}", checkIfExists: true)
+                if (isNotBlank(info.UmiRead))
+                {
+                    theseReads << file("${params.FASTQ_DIR}/${info.UmiRead}", checkIfExists: true)
+                }
+                tuple unitId, 2, theseReads
             }
 
         splitFastq1(read1Channel)
@@ -53,8 +67,10 @@ workflow chunkFastq
                 tuple unitId, sizeOf(fastqFiles)
             }
 
-        // Flatten the list of files in all channels to have two channels with
+        // Flatten the list of files in all channels to have two new channels with
         // a single file per item. Also extract the chunk number from the file name.
+        // UMI read channel will be a mix of split given UMI files and
+        // replicated (for number of chunks) empty files.
 
         perChunkChannel1 =
             splitFastq1.out
@@ -82,7 +98,7 @@ workflow chunkFastq
         combinedChunkChannel.view
         {
             unitId, chunk, r1, r2 ->
-            "${unitId} (chunk ${chunk}) ${r1.name} ${r2.name}"
+            "${unitId} (chunk ${chunk}): ${r1.name} ${r2.name}"
         }
 
     emit:

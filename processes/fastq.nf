@@ -20,12 +20,12 @@ include { safeName } from "../modules/nextflow-support/functions"
  */
 process splitFastq
 {
-    memory { 64.MB * task.attempt }
+    memory { 128.MB * task.attempt }
     time { 12.hour * task.attempt}
     maxRetries 2
 
     input:
-        tuple val(unitId), val(read), path(fastqFile)
+        tuple val(unitId), val(read), path(fastqFiles, arity: '1..*')
 
     output:
         // Note: glob file name can return a list of files or a single file, not a list of one file.
@@ -34,6 +34,9 @@ process splitFastq
         tuple val(unitId), val(read), path("*-C??????.fq.gz")
 
     shell:
+        sourceFile = fastqFiles[0]
+        umiFile = fastqFiles.size() > 1 ? fastqFiles[1] : null
+        umiArg = umiFile ? "--umi=\"${umiFile}\"" : ''
         nameBase = "${safeName(unitId)}.r_${read}"
 
         template "fastq/splitFastq.sh"

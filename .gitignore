@@ -11,5 +11,5 @@ target
 
 *.sif
 __pycache__
-venv
-**/venv
+venv*
+**/venv*
