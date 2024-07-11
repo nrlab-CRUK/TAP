@@ -15,7 +15,7 @@ RUN curl -L -O https://github.com/conda-forge/miniforge/releases/download/${MINI
     sh miniforge3-linux-x86_64.sh -b -p /opt/miniforge3 && \
     rm miniforge3-linux-x86_64.sh
 
-COPY tap.yml connor.yml ./
+COPY tap.yml connor.yml requirements.txt ./
 RUN /opt/miniforge3/bin/mamba env create -f tap.yml && /opt/miniforge3/bin/mamba clean -a
 RUN /opt/miniforge3/bin/mamba env create -f connor.yml && /opt/miniforge3/bin/mamba clean -a
 
@@ -39,3 +39,7 @@ RUN wget -O /opt/TruSeq3-PE-2with_rcUMI.fa https://takarabio.com/resourcedocumen
 ENV JAVA_HOME /usr/lib/jvm/jre-17
 ENV GROOVY_HOME /opt/groovy-${GROOVY_VERSION}
 ENV PATH ${JAVA_HOME}/bin:${GROOVY_HOME}/bin:/opt/miniforge3/envs/tap/bin:/opt/miniforge3/envs/connor/bin:$PATH
+
+# Install Python add-ons using pip
+
+RUN pip install --upgrade -r requirements.txt
