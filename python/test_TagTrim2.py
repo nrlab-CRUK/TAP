@@ -53,34 +53,20 @@ class TagTrim2Test(unittest.TestCase):
 
         read1Out = MockOutput()
         read2Out = MockOutput()
-        umi1Out = MockOutput()
-        umi2Out = MockOutput()
 
-        tagtrim.processReads(read1, read2, read1Out, read2Out, umi1Out, umi2Out)
+        tagtrim.processReads(read1, read2, read1Out, read2Out)
 
         r1 = read1Out.output[0].split('\n')
 
-        self.assertEqual(r1[0], "@r1 c1", "Read one name wrong.")
+        self.assertEqual(r1[0], f"@r1:{self.umi} c1", "Read one name wrong.")
         self.assertEqual(r1[1], self.dna, "Read one read wrong.")
         self.assertEqual(r1[3], self.dnaQ, "Read one base quality wrong.")
 
         r2 = read2Out.output[0].split('\n')
 
-        self.assertEqual(r2[0], "@r2 c2", "Read two name wrong.")
+        self.assertEqual(r2[0], f"@r2:{self.umi} c2", "Read two name wrong.")
         self.assertEqual(r2[1], self.dna, "Read two read wrong.")
         self.assertEqual(r2[3], self.dnaQ, "Read two base quality wrong.")
-
-        u1 = umi1Out.output[0].split('\n')
-
-        self.assertEqual(u1[0], "@r1 c1", "UMI one name wrong.")
-        self.assertEqual(u1[1], self.umi, "UMI one read wrong.")
-        self.assertEqual(u1[3], self.umiQ, "UMI one base quality wrong.")
-
-        u2 = umi2Out.output[0].split('\n')
-
-        self.assertEqual(u2[0], "@r2 c2", "UMI two name wrong.")
-        self.assertEqual(u2[1], self.umi, "UMI two read wrong.")
-        self.assertEqual(u2[3], self.umiQ, "UMI two base quality wrong.")
 
 
     def testNonOverlappingReadOne(self):
@@ -107,30 +93,20 @@ class TagTrim2Test(unittest.TestCase):
 
         read1Out = MockOutput()
         read2Out = MockOutput()
-        umi1Out = MockOutput()
-        umi2Out = MockOutput()
 
-        tagtrim.processReads(read1, read2, read1Out, read2Out, umi1Out, umi2Out)
+        tagtrim.processReads(read1, read2, read1Out, read2Out)
 
         r1 = read1Out.output[0].split('\n')
 
+        self.assertEqual(r1[0], f"@r1:{self.umi} c1", "Read one name wrong.")
         self.assertEqual(r1[1], self.dna + (TagTrim2.RSTEM if stemIn1 else self.noStem) + self.dna, "Read one read wrong.")
         self.assertEqual(r1[3], self.dnaQ + self.stemQ + self.dnaQ, "Read one base quality wrong.")
 
         r2 = read2Out.output[0].split('\n')
 
+        self.assertEqual(r2[0], f"@r2:{self.umi} c2", "Read two name wrong.")
         self.assertEqual(r2[1], self.dna + (self.noStem if stemIn1 else TagTrim2.RSTEM) + self.dna + self.dna, "Read two read wrong.")
         self.assertEqual(r2[3], self.dnaQ + self.stemQ + self.dnaQ + self.dnaQ, "Read two base quality wrong.")
-
-        u1 = umi1Out.output[0].split('\n')
-
-        self.assertEqual(u1[1], self.umi, "UMI one read wrong.")
-        self.assertEqual(u1[3], self.umiQ, "UMI one base quality wrong.")
-
-        u2 = umi2Out.output[0].split('\n')
-
-        self.assertEqual(u2[1], self.umi, "UMI two read wrong.")
-        self.assertEqual(u2[3], self.umiQ, "UMI two base quality wrong.")
 
     def testOverlapping(self):
 
@@ -149,30 +125,20 @@ class TagTrim2Test(unittest.TestCase):
 
         read1Out = MockOutput()
         read2Out = MockOutput()
-        umi1Out = MockOutput()
-        umi2Out = MockOutput()
 
-        tagtrim.processReads(read1, read2, read1Out, read2Out, umi1Out, umi2Out)
+        tagtrim.processReads(read1, read2, read1Out, read2Out)
 
         r1 = read1Out.output[0].split('\n')
 
+        self.assertEqual(r1[0], f"@r1:{self.umi} c1", "Read one name wrong.")
         self.assertEqual(r1[1], self.dna, "Read one read wrong.")
         self.assertEqual(r1[3], self.dnaQ, "Read one base quality wrong.")
 
         r2 = read2Out.output[0].split('\n')
 
+        self.assertEqual(r2[0], f"@r2:{self.umi} c2", "Read two name wrong.")
         self.assertEqual(r2[1], self.dna, "Read two read wrong.")
         self.assertEqual(r2[3], self.dnaQ, "Read two base quality wrong.")
-
-        u1 = umi1Out.output[0].split('\n')
-
-        self.assertEqual(u1[1], self.umi, "UMI one read wrong.")
-        self.assertEqual(u1[3], self.umiQ, "UMI one base quality wrong.")
-
-        u2 = umi2Out.output[0].split('\n')
-
-        self.assertEqual(u2[1], self.umi, "UMI two read wrong.")
-        self.assertEqual(u2[3], self.umiQ, "UMI two base quality wrong.")
 
 
     def basesToRecord(self, read, b, q):

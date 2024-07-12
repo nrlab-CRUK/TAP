@@ -95,11 +95,13 @@ workflow chunkFastq
 
         combinedChunkChannel = perChunkChannel1.join(perChunkChannel2, by: 0..1)
 
+        /*
         combinedChunkChannel.view
         {
             unitId, chunk, r1, r2 ->
             "${unitId} (chunk ${chunk}): ${r1.name} ${r2.name}"
         }
+        */
 
     emit:
         fastqChannel = combinedChunkChannel

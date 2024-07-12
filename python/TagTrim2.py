@@ -22,8 +22,6 @@ class TagTrim2:
         self.parser.add_argument("--read2", help="Read two FASTQ file (input).", type=str, required=True)
         self.parser.add_argument("--out1",  help="Read one FASTQ file (output).", type=str, required=True)
         self.parser.add_argument("--out2",  help="Read two FASTQ file (output).", type=str, required=True)
-        self.parser.add_argument("--umi1",  help="UMI one FASTQ file (output).", type=str, required=True)
-        self.parser.add_argument("--umi2",  help="UMI two FASTQ file (output).", type=str, required=True)
 
         self.compressionLevel = 1
 
@@ -41,9 +39,7 @@ class TagTrim2:
         try:
             with FastxFile(args.read1, "rb") as read1File, FastxFile(args.read2, "rb") as read2File, \
                  gzip.open(args.out1, "wt", compresslevel = self.compressionLevel, newline = '\n') as out1File, \
-                 gzip.open(args.out2, "wt", compresslevel = self.compressionLevel, newline = '\n') as out2File, \
-                 gzip.open(args.umi1, "wt", compresslevel = self.compressionLevel, newline = '\n') as umi1File, \
-                 gzip.open(args.umi2, "wt", compresslevel = self.compressionLevel, newline = '\n') as umi2File:
+                 gzip.open(args.out2, "wt", compresslevel = self.compressionLevel, newline = '\n') as out2File:
 
                 read1Iter = iter(read1File)
                 read2Iter = iter(read2File)
@@ -52,13 +48,12 @@ class TagTrim2:
                     read1 = next(read1Iter)
                     read2 = next(read2Iter)
 
-                    self.processReads(read1, read2, out1File, out2File, umi1File, umi2File)
+                    self.processReads(read1, read2, out1File, out2File)
 
         except StopIteration:
             pass
 
-    def processReads(self, read1: FastxRecord, read2: FastxRecord,
-                     out1File, out2File, umi1File, umi2File):
+    def processReads(self, read1: FastxRecord, read2: FastxRecord, out1File, out2File):
         b1 = read1.sequence
         insert1Start = self.getInsertStart(b1)
         if insert1Start < 0:
@@ -85,26 +80,22 @@ class TagTrim2:
         insert1 = b1[insert1Start:insert1End]
         insertQ1 = read1.quality[insert1Start:insert1End]
         umi1 = b1[0:TagTrim2.UMI_LENGTH]
-        umiQ1 = read1.quality[0:TagTrim2.UMI_LENGTH]
+        #umiQ1 = read1.quality[0:TagTrim2.UMI_LENGTH]
 
         insert2 = b2[insert2Start:insert2End]
         insertQ2 = read2.quality[insert2Start:insert2End]
         umi2 = b2[0:TagTrim2.UMI_LENGTH]
-        umiQ2 = read2.quality[0:TagTrim2.UMI_LENGTH]
+        #umiQ2 = read2.quality[0:TagTrim2.UMI_LENGTH]
 
-        out1File.write(str(self.toRecord(read1, insert1, insertQ1)))
+        out1File.write(str(self.toRecord(read1, umi1, insert1, insertQ1)))
         out1File.write('\n')
-        umi1File.write(str(self.toRecord(read1, umi1, umiQ1)))
-        umi1File.write('\n')
-        out2File.write(str(self.toRecord(read2, insert2, insertQ2)))
+        out2File.write(str(self.toRecord(read2, umi2, insert2, insertQ2)))
         out2File.write('\n')
-        umi2File.write(str(self.toRecord(read2, umi2, umiQ2)))
-        umi2File.write('\n')
 
 
-    def toRecord(self, read: FastxRecord, seq: str, qual: str) -> FastxRecord:
+    def toRecord(self, read: FastxRecord, umi: str, seq: str, qual: str) -> FastxRecord:
         record = FastxRecord()
-        record.name = read.name
+        record.name = f"{read.name}:{umi}"
         record.comment = read.comment
         record.sequence = seq
         record.quality = qual

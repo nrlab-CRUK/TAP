@@ -76,7 +76,8 @@ class FastqSplit:
     def noUmi(self, source):
         readCounter = 0
         try:
-            with xopen(source, 'rt') as readHandle:  # 'rt' mode for text mode reading
+            # 'rt' mode for text mode reading
+            with xopen(source, 'rt') as readHandle:
                 readIter = FastqGeneralIterator(readHandle)
                 for (id, seq, qual) in readIter:
                     self.writeRecord(readCounter, id, seq, qual)
@@ -88,28 +89,30 @@ class FastqSplit:
     def withUmi(self, source, umiSource):
         readCounter = 0
         try:
-            with xopen(source, 'rt') as readHandle:  # 'rt' mode for text mode reading
-                with xopen(umiSource, 'rt') as umiHandle:
-                    readIter = FastqGeneralIterator(readHandle)
-                    umiIter = FastqGeneralIterator(umiHandle)
+            # 'rt' mode for text mode reading
+            with xopen(source, 'rt') as readHandle, \
+                 xopen(umiSource, 'rt') as umiHandle:
 
-                    for (readId, readSeq, readQual) in readIter:
-                        try:
-                            (umiId, umiSeq, umiQual) = next(umiIter)
-                        except StopIteration:
-                            raise CorruptedFileException(f"Looks like {umiSource} has fewer reads than {source}")
+                readIter = FastqGeneralIterator(readHandle)
+                umiIter = FastqGeneralIterator(umiHandle)
 
-                        readIdParts = readId.split()
-                        assert len(readIdParts) == 2, "Expect the read id to have two parts when split by white space."
+                for (readId, readSeq, readQual) in readIter:
+                    try:
+                        (umiId, umiSeq, umiQual) = next(umiIter)
+                    except StopIteration:
+                        raise CorruptedFileException(f"Looks like {umiSource} has fewer reads than {source}")
 
-                        umiIdParts = umiId.split()
-                        assert len(umiIdParts) == 2, "Expect the UMI read id to have two parts when split by white space."
+                    readIdParts = readId.split()
+                    assert len(readIdParts) == 2, "Expect the read id to have two parts when split by white space."
 
-                        if readIdParts[0] != umiIdParts[0]:
-                            raise CorruptedFileException(f"Have mismatched reads on line {readCounter * 4 + 1} of the two read files.")
+                    umiIdParts = umiId.split()
+                    assert len(umiIdParts) == 2, "Expect the UMI read id to have two parts when split by white space."
 
-                        self.writeRecord(readCounter, f"{readIdParts[0]}:{umiSeq} {readIdParts[1]}", readSeq, readQual)
-                        readCounter += 1
+                    if readIdParts[0] != umiIdParts[0]:
+                        raise CorruptedFileException(f"Have mismatched reads on line {readCounter * 4 + 1} of the two read files.")
+
+                    self.writeRecord(readCounter, f"{readIdParts[0]}:{umiSeq} {readIdParts[1]}", readSeq, readQual)
+                    readCounter += 1
         except EOFError as e:
             raise CorruptedFileException(f"Looks like one of the files {source} or {umiSource} is truncated or corrupted: \"{e.args[0]}\"")
         return readCounter

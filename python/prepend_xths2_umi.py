@@ -34,7 +34,10 @@ def extract_umi(record: FastxRecord):
 
 count = 0
 
-with pysam.FastxFile(args.fastq1) as in1, pysam.FastxFile(args.fastq2) as in2, gzip.open(args.output1, "wt", compresslevel = 4) as out1, gzip.open(args.output2, "wt", compresslevel = 4) as out2:
+with pysam.FastxFile(args.fastq1) as in1, \
+     pysam.FastxFile(args.fastq2) as in2, \
+     gzip.open(args.output1, "wt", compresslevel = 4) as out1, \
+     gzip.open(args.output2, "wt", compresslevel = 4) as out2:
     for record1, record2 in zip(in1, in2):
         count += 1
 

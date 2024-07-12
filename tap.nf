@@ -62,7 +62,6 @@ workflow
     writePipelineInfo(file("${workDir}/latest_pipeline_info.json"), params)
 
     chunkFastq(csvChannel)
-    /*
     trimming(chunkFastq.out.fastqChannel, csvChannel)
 
     alignment(trimming.out)
@@ -77,6 +76,7 @@ workflow
     fastqc(publish.out)
     checksum(publish.out)
 
+    /*
     recordRun(csvChannel, publish.out)
     */
 }

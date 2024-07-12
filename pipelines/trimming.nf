@@ -3,6 +3,7 @@
  */
 
 include { javaMemoryOptions; safeName } from "../modules/nextflow-support/functions"
+include { hasUMIs } from '../functions/functions'
 
 def baseName(fastqFile)
 {
@@ -14,16 +15,16 @@ def baseName(fastqFile)
 
 process trimGalore
 {
-    cpus   16
+    cpus   8
     memory 1.GB
     time { 12.hour * task.attempt }
     maxRetries 1
 
     input:
-        tuple val(unitId), val(chunk), path(read1In), path(read2In), val(hasUmiRead), path(umiread)
+        tuple val(unitId), val(chunk), path(read1In), path(read2In), val(libraryPrep)
 
     output:
-        tuple val(unitId), val(chunk), path(read1Out), path(read2Out), val(hasUmiRead), path(umiread)
+        tuple val(unitId), val(chunk), path(read1Out), path(read2Out)
 
     shell:
         outFilePrefix = "${safeName(unitId)}.c_${chunk}"
@@ -40,17 +41,15 @@ process tagtrim
     maxRetries 1
 
     input:
-        tuple val(unitId), val(chunk), path(read1In), path(read2In)
+        tuple val(unitId), val(chunk), path(read1In), path(read2In), val(libraryPrep)
 
     output:
-        tuple val(unitId), val(chunk), path(read1Out), path(read2Out), path(umi1Out), path(umi2Out)
+        tuple val(unitId), val(chunk), path(read1Out), path(read2Out)
 
     shell:
         outFilePrefix = "${safeName(unitId)}.c_${chunk}"
         read1Out = "${outFilePrefix}.r_1.tagtrim.fq.gz"
         read2Out = "${outFilePrefix}.r_2.tagtrim.fq.gz"
-        umi1Out = "${outFilePrefix}.u_1.tagtrim.fq.gz"
-        umi2Out = "${outFilePrefix}.u_2.tagtrim.fq.gz"
 
         template "trimming/tagtrim.sh"
 }
@@ -63,7 +62,7 @@ process agentTrimmer
     maxRetries 1
 
     input:
-        tuple val(unitId), val(chunk), path(read1In), path(read2In)
+        tuple val(unitId), val(chunk), path(read1In), path(read2In), val(libraryPrep)
 
     output:
         tuple val(unitId), val(chunk), path(read1Out), path(read2Out)
@@ -86,7 +85,7 @@ process trimmomatic
     maxRetries 1
 
     input:
-        tuple val(unitId), val(chunk), path(read1In), path(read2In)
+        tuple val(unitId), val(chunk), path(read1In), path(read2In), val(libraryPrep)
 
     output:
         tuple val(unitId), val(chunk), path(read1Out), path(read2Out)
@@ -123,7 +122,7 @@ process prependXTHS2UMI
         """
 }
 
-process prependSingleUMI
+process prependIlluminaUMI
 {
     /*
      * Can optimise this later to do each read as a separate process.
@@ -134,7 +133,7 @@ process prependSingleUMI
     maxRetries 1
 
     input:
-        tuple val(unitId), val(chunk), path(read1In), path(read2In), path(umiread)
+        tuple val(unitId), val(chunk), path(read1In), path(read2In)
 
     output:
         tuple val(unitId), val(chunk), path(read1Out), path(read2Out)
@@ -145,39 +144,12 @@ process prependSingleUMI
         read2Out = "${safeUnitId}.umi.r_2.c_${chunk}.fq.gz"
 
         """
-        python3 "${projectDir}/python/concat_fastq.py" \
-            "!{umiread}" "!{read1In}" "!{read1Out}"
-        python3 "${projectDir}/python/concat_fastq.py" \
-            "!{umiread}" "!{read2In}" "!{read2Out}"
-        """
-}
-
-process prependDoubleUMI
-{
-    /*
-     * Can optimise this later to do each read as a separate process.
-     */
-
-    memory { 1.GB * task.attempt }
-    time { 8.hour * task.attempt }
-    maxRetries 1
-
-    input:
-        tuple val(unitId), val(chunk), path(read1In), path(read2In), path(umi1), path(umi2)
-
-    output:
-        tuple val(unitId), val(chunk), path(read1Out), path(read2Out)
-
-    shell:
-        safeUnitId = safeName(unitId)
-        read1Out = "${safeUnitId}.umi.r_1.c_${chunk}.fq.gz"
-        read2Out = "${safeUnitId}.umi.r_2.c_${chunk}.fq.gz"
-
-        """
-        python3 "${projectDir}/python/concat_fastq.py" \
-            "!{umi1}" "!{read1In}" "!{read1Out}"
-        python3 "${projectDir}/python/concat_fastq.py" \
-            "!{umi2}" "!{read2In}" "!{read2Out}"
+        python3 "${projectDir}/python/PrependUMI.py" \
+            --source "!{read1In}" \
+            --output "!{read1Out}"
+        python3 "${projectDir}/python/PrependUMI.py" \
+            --source "!{read2In}" \
+            --output "!{read2Out}"
         """
 }
 
@@ -188,40 +160,21 @@ workflow trimGaloreWF
         fastqChannel
 
     main:
-        trimmed = trimGalore(
-            fastqChannel
-            .map
-            {
-                unitId, chunk, read1, read2, hasUmi, readU, info ->
-                tuple unitId, chunk, read1, read2, hasUmi, readU
-            })
+        trimmed = trimGalore(fastqChannel)
 
-        // only prepend UMI read if one was specified in the UmiRead column in
-        // the sample sheet AND Connor UMI-based deduplication is requested
+        // only prepend UMI read if there are UMIs in the read headers
+        // AND Connor UMI-based deduplication is requested
 
         prepended = trimmed.branch
         {
-            unitId, chunk, read1, read2, hasUMI, readU ->
-            connor : params.CONNOR_COLLAPSING && hasUMI
+            unitId, chunk, read1, read2 ->
+            connor : params.CONNOR_COLLAPSING && hasUMIs(read1)
             noConnor : true
         }
 
-        prependSingleUMI(
-            prepended.connor
-            .map
-            {
-                unitId, chunk, read1, read2, hasUmi, readU ->
-                tuple unitId, chunk, read1, read2, readU
-            })
+        prependIlluminaUMI(prepended.connor)
 
-        noConnorChannel = prepended.noConnor
-            .map
-            {
-                unitId, chunk, read1, read2, hasUmi, readU ->
-                tuple unitId, chunk, read1, read2
-            }
-
-        trimmedChannel = noConnorChannel.mix(prependSingleUMI.out)
+        trimmedChannel = prepended.noConnor.mix(prependIlluminaUMI.out)
 
     emit:
         trimmedChannel
@@ -233,13 +186,7 @@ workflow tagtrimWF
         fastqChannel
 
     main:
-        trimmed = tagtrim(
-            fastqChannel
-            .map
-            {
-                unitId, chunk, read1, read2, hasUmi, readU, info ->
-                tuple unitId, chunk, read1, read2
-            })
+        trimmed = tagtrim(fastqChannel)
 
         // only prepend the extracted UMI reads from tagtrim if Connor
         // deduplication is requested
@@ -250,17 +197,9 @@ workflow tagtrimWF
             noConnor : true
         }
 
-        prependDoubleUMI(prepended.connor)
+        prependIlluminaUMI(prepended.connor)
 
-        noConnorChannel =
-            prepended.noConnor
-            .map
-            {
-                unitId, chunk, read1, read2, umi1, umi2 ->
-                tuple unitId, chunk, read1, read2
-            }
-
-        trimmedChannel = noConnorChannel.mix(prependDoubleUMI.out)
+        trimmedChannel = prepended.noConnor.mix(prependIlluminaUMI.out)
 
     emit:
         trimmedChannel
@@ -272,12 +211,7 @@ workflow agentTrimmerWF
         fastqChannel
 
     main:
-        trimmed = agentTrimmer(
-            fastqChannel.map
-            {
-                unitId, chunk, read1, read2, hasUmi, readU, info ->
-                tuple unitId, chunk, read1, read2
-            })
+        trimmed = agentTrimmer(fastqChannel)
 
         // only prepend the extracted UMI from AGeNT trimmer if Connor
         // deduplication is requested
@@ -305,16 +239,10 @@ workflow trimmomaticWF
         fastqChannel
 
     main:
-        trimmed = trimmomatic(
-            fastqChannel
-            .map
-            {
-                unitId, chunk, read1, read2, hasUmi, readU, info ->
-                tuple unitId, chunk, read1, read2
-            })
+        trimmomatic(fastqChannel)
 
     emit:
-        trimmed
+        trimmedChannel = trimmomatic.out
 }
 
 workflow noTrimWF
@@ -328,28 +256,22 @@ workflow noTrimWF
 
         prepended = fastqChannel.branch
         {
-            unitId, chunk, read1, read2, hasUMI, readU, info ->
-            connor : params.CONNOR_COLLAPSING && hasUMI
+            unitId, chunk, read1, read2, libraryPrep ->
+            connor : params.CONNOR_COLLAPSING && hasUMIs(read1)
             noConnor : true
         }
 
-        prependSingleUMI(
-            prepended.connor
-            .map
-            {
-                unitId, chunk, read1, read2, hasUmi, readU, info ->
-                tuple unitId, chunk, read1, read2, readU
-            })
+        prependIlluminaUMI(prepended.connor)
 
         noConnorChannel =
             prepended.noConnor
             .map
             {
-                unitId, chunk, read1, read2, hasUmi, readU, info ->
+                unitId, chunk, read1, read2, libraryPrep ->
                 tuple unitId, chunk, read1, read2
             }
 
-        trimmedChannel = noConnorChannel.mix(prependSingleUMI.out)
+        trimmedChannel = noConnorChannel.mix(prependIlluminaUMI.out)
 
     emit:
         trimmedChannel
@@ -359,7 +281,7 @@ workflow noTrimWF
  * Workflow to split the FASTQ reads into chunks and emit a channel of
  * per sample per chunk files for trimming and then alignment.
  *
- * In: the split FASTQ channe (unitId, chunk, read1, read2, hasUMI, readU)
+ * In: the split FASTQ channel (unitId, chunk, read1, read2)
  * In: the CSV channel (unitId, row)
  *
  * Out: channel (unitId, chunk, read1, read2)
@@ -371,23 +293,29 @@ workflow trimming
         sampleInfoChannel
 
     main:
-        withSampleInfoChannel = fastqChannel.combine(sampleInfoChannel, by: 0)
+        trimChoice =
+            fastqChannel
+            .combine(sampleInfoChannel, by: 0)
+            .map
+            {
+                unitId, chunk, read1, read2, info ->
+                tuple unitId, chunk, read1, read2, info['LibraryPrep']
+            }
+            .branch
+            {
+                unitId, chunk, read1, read2, libraryPrep ->
+                tagtrim : libraryPrep == 'Thruplex_Tag_seq'
+                agentTrimmer : libraryPrep == 'Agilent_XTHS2'
+                trimmomatic : libraryPrep == 'Thruplex_Tag_seq_HV'
+                trimGalore : params.TRIM_FASTQ
+                noTrim : true
+            }
 
-        trimOut = withSampleInfoChannel.branch
-        {
-            unitId, chunk, read1, read2, hasUMI, readU, info ->
-            tagtrim : info['LibraryPrep'] == 'Thruplex_Tag_seq'
-            agentTrimmer : info['LibraryPrep'] == 'Agilent_XTHS2'
-            trimmomatic : info['LibraryPrep'] == 'Thruplex_Tag_seq_HV'
-            trimGalore : params.TRIM_FASTQ
-            noTrim : true
-        }
-
-        trimGaloreWF(trimOut.trimGalore)
-        tagtrimWF(trimOut.tagtrim)
-        agentTrimmerWF(trimOut.agentTrimmer)
-        trimmomaticWF(trimOut.trimmomatic)
-        noTrimWF(trimOut.noTrim)
+        trimGaloreWF(trimChoice.trimGalore)
+        tagtrimWF(trimChoice.tagtrim)
+        agentTrimmerWF(trimChoice.agentTrimmer)
+        trimmomaticWF(trimChoice.trimmomatic)
+        noTrimWF(trimChoice.noTrim)
 
         afterTrimmingChannel = noTrimWF.out.mix(trimGaloreWF.out).mix(tagtrimWF.out).mix(agentTrimmerWF.out).mix(trimmomaticWF.out)
 
