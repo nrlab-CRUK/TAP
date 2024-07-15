@@ -146,10 +146,12 @@ process prependIlluminaUMI
         """
         python3 "${projectDir}/python/PrependUMI.py" \
             --source "!{read1In}" \
-            --output "!{read1Out}"
+            --output "!{read1Out}" \
+            --read 1
         python3 "${projectDir}/python/PrependUMI.py" \
             --source "!{read2In}" \
-            --output "!{read2Out}"
+            --output "!{read2Out}" \
+            --read 2
         """
 }
 

@@ -54,7 +54,7 @@ def hasUMIs(fastqFile)
         if (firstRead)
         {
             def parts = firstRead.split(/[\s:]+/)
-            hasUMI = parts.length >= 8 && parts[7] ==~ /r?[ACGT]+/
+            hasUMI = parts.length >= 8 && parts[7] ==~ /r?[ACGT]+(\+r?[ACGT]+)?/
         }
 
         return hasUMI

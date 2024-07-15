@@ -45,7 +45,8 @@ class PrependUMITest(unittest.TestCase):
         prepender = PrependUMI()
         args = SimpleNamespace(**{
             'source': Path('testdata/regular_50.fq'),
-            'output': self.outDir / 'noumi.fq'
+            'output': self.outDir / 'noumi.fq',
+            'read': 1
         })
 
         prepender.run(args, quiet = True)
@@ -59,11 +60,18 @@ class PrependUMITest(unittest.TestCase):
 
         self.assertEqual(refMd5, outMd5, "Files are not the same.")
 
-    def testPrependWithUmi(self):
+    def testPrependWithSingleUmiRead1(self):
+        self._prependWithSingleUmi(1)
+
+    def testPrependWithSingleUmiRead2(self):
+        self._prependWithSingleUmi(2)
+
+    def _prependWithSingleUmi(self, readNumber: int):
         prepender = PrependUMI()
         args = SimpleNamespace(**{
             'source': Path('testdata/regular_with_umi_50.fq'),
-            'output': self.outDir / 'withumi.fq.gz'
+            'output': self.outDir / f'withumi_single_read{readNumber}.fq.gz',
+            'read': readNumber
         })
 
         prepender.run(args, quiet = True)
@@ -80,4 +88,53 @@ class PrependUMITest(unittest.TestCase):
             handle.readline()
             qualLine = handle.readline().strip()
             self.assertEqual("@@@@@@@@@@3AAABFFFFFFFGGGGGGFCGGGHFAAF4422AA2B55DFG55222A1335ABA333AA1AFFE353310>>F1F@44@E3BGFHH?DGFCGGBG3BEBFFCCE03?22FGGH0FE4FGBGGEGE4B2?FD33G33FGGH3C22<//BGE", qualLine,
+                             "quality of the first read is wrong.")
+
+
+    def testPrependWithDoubleUmiRead1(self):
+        prepender = PrependUMI()
+        args = SimpleNamespace(**{
+            'source': Path('testdata/regular_with_dual_umi_50.fq'),
+            'output': self.outDir / 'withumi_dual_read1.fq.gz',
+            'read': 1
+        })
+
+        prepender.run(args, quiet = True)
+
+        self.assertTrue(args.output.exists(), "Output file not created.")
+
+        with xopen(args.output, 'rt') as handle:
+            idLine = handle.readline().strip()
+            self.assertEqual("@M01686:2:000000000-DFTML:1:1101:18140:1563:rGGGGCAAGAT+rACATTATT 1:N:0:AGCAGGAA", idLine,
+                             "id of the first read is wrong.")
+            seqLine = handle.readline().strip()
+            self.assertEqual("GGGGCAAGATCTGACCCTTTCAGCACCTCCTTGTCCCTGCGGTCCTAATTTGGGGGTAAGACTTGGCTCCCTTCAGGCCGTCTATCAATCATTTTTGCTCCTTATGCAAACACAGACAGTTTTGTCATTATTCTAAAAATAAGTGCTTTTAAGGAGGCTG", seqLine,
+                             "sequence of the first read is wrong.")
+            handle.readline()
+            qualLine = handle.readline().strip()
+            self.assertEqual("@@@@@@@@@@3AAABFFFFFFFGGGGGGFCGGGHFAAF4422AA2B55DFG55222A1335ABA333AA1AFFE353310>>F1F@44@E3BGFHH?DGFCGGBG3BEBFFCCE03?22FGGH0FE4FGBGGEGE4B2?FD33G33FGGH3C22<//BGE", qualLine,
+                             "quality of the first read is wrong.")
+
+    def testPrependWithDoubleUmiRead2(self):
+        prepender = PrependUMI()
+        args = SimpleNamespace(**{
+            'source': Path('testdata/regular_with_dual_umi_50.fq'),
+            'output': self.outDir / 'withumi_dual_read2.fq.gz',
+            'read': 2
+        })
+
+        prepender.run(args, quiet = True)
+
+        self.assertTrue(args.output.exists(), "Output file not created.")
+
+        with xopen(args.output, 'rt') as handle:
+            idLine = handle.readline().strip()
+            self.assertEqual("@M01686:2:000000000-DFTML:1:1101:18140:1563:rGGGGCAAGAT+rACATTATT 1:N:0:AGCAGGAA", idLine,
+                             "id of the first read is wrong.")
+            seqLine = handle.readline().strip()
+            self.assertEqual("ACATTATTCTGACCCTTTCAGCACCTCCTTGTCCCTGCGGTCCTAATTTGGGGGTAAGACTTGGCTCCCTTCAGGCCGTCTATCAATCATTTTTGCTCCTTATGCAAACACAGACAGTTTTGTCATTATTCTAAAAATAAGTGCTTTTAAGGAGGCTG", seqLine,
+                             "sequence of the first read is wrong.")
+            handle.readline()
+            qualLine = handle.readline().strip()
+            self.assertEqual("@@@@@@@@3AAABFFFFFFFGGGGGGFCGGGHFAAF4422AA2B55DFG55222A1335ABA333AA1AFFE353310>>F1F@44@E3BGFHH?DGFCGGBG3BEBFFCCE03?22FGGH0FE4FGBGGEGE4B2?FD33G33FGGH3C22<//BGE", qualLine,
                              "quality of the first read is wrong.")

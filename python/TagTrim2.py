@@ -87,9 +87,11 @@ class TagTrim2:
         umi2 = b2[0:TagTrim2.UMI_LENGTH]
         #umiQ2 = read2.quality[0:TagTrim2.UMI_LENGTH]
 
-        out1File.write(str(self.toRecord(read1, umi1, insert1, insertQ1)))
+        wholeUMI = f"{umi1}+{umi2}"
+
+        out1File.write(str(self.toRecord(read1, wholeUMI, insert1, insertQ1)))
         out1File.write('\n')
-        out2File.write(str(self.toRecord(read2, umi2, insert2, insertQ2)))
+        out2File.write(str(self.toRecord(read2, wholeUMI, insert2, insertQ2)))
         out2File.write('\n')
 
 

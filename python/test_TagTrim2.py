@@ -22,10 +22,11 @@ class MockOutput:
 class TagTrim2Test(unittest.TestCase):
 
     def setUp(self):
-        self.umi = 'u' * TagTrim2.UMI_LENGTH
+        self.umi1 = '1' * TagTrim2.UMI_LENGTH
+        self.umi2 = '2' * TagTrim2.UMI_LENGTH
         self.dna = 'd' * 4
         self.noStem = 'X' * TagTrim2.STEM_LENGTH
-        self.umiQ = 'U' * len(self.umi)
+        self.umiQ = 'U' * len(self.umi1)
         self.dnaQ = '@' * len(self.dna)
         self.stemQ = 'x' * TagTrim2.STEM_LENGTH
 
@@ -42,12 +43,13 @@ class TagTrim2Test(unittest.TestCase):
         self.doTrim("TCA", "TGA")
 
     def doTrim(self, insert1, insert2):
-        b1 = self.umi + insert1 + TagTrim2.STEM + self.dna
+        b1 = self.umi1 + insert1 + TagTrim2.STEM + self.dna
+        b2 = self.umi2 + insert1 + TagTrim2.STEM + self.dna
 
         q1 = self.umiQ + '.' * (len(insert1) + TagTrim2.STEM_LENGTH) + self.dnaQ
 
         read1 = self.basesToRecord(1, b1, q1)
-        read2 = self.basesToRecord(2, b1, q1)
+        read2 = self.basesToRecord(2, b2, q1)
 
         tagtrim = TagTrim2()
 
@@ -58,13 +60,13 @@ class TagTrim2Test(unittest.TestCase):
 
         r1 = read1Out.output[0].split('\n')
 
-        self.assertEqual(r1[0], f"@r1:{self.umi} c1", "Read one name wrong.")
+        self.assertEqual(r1[0], f"@r1:{self.umi1}+{self.umi2} c1", "Read one name wrong.")
         self.assertEqual(r1[1], self.dna, "Read one read wrong.")
         self.assertEqual(r1[3], self.dnaQ, "Read one base quality wrong.")
 
         r2 = read2Out.output[0].split('\n')
 
-        self.assertEqual(r2[0], f"@r2:{self.umi} c2", "Read two name wrong.")
+        self.assertEqual(r2[0], f"@r2:{self.umi1}+{self.umi2} c2", "Read two name wrong.")
         self.assertEqual(r2[1], self.dna, "Read two read wrong.")
         self.assertEqual(r2[3], self.dnaQ, "Read two base quality wrong.")
 
@@ -78,11 +80,11 @@ class TagTrim2Test(unittest.TestCase):
     def nonOverlapping(self, read):
         stemIn1 = read == 1
 
-        b1 = self.umi + TagTrim2.STEM + self.dna + (TagTrim2.RSTEM if stemIn1 else self.noStem) + self.dna
+        b1 = self.umi1 + TagTrim2.STEM + self.dna + (TagTrim2.RSTEM if stemIn1 else self.noStem) + self.dna
 
         q1 = self.umiQ + self.stemQ + self.dnaQ + self.stemQ + self.dnaQ
 
-        b2 = self.umi + TagTrim2.STEM + self.dna + (self.noStem if stemIn1 else TagTrim2.RSTEM) + self.dna + self.dna
+        b2 = self.umi2 + TagTrim2.STEM + self.dna + (self.noStem if stemIn1 else TagTrim2.RSTEM) + self.dna + self.dna
 
         q2 = self.umiQ + self.stemQ + self.dnaQ + self.stemQ + self.dnaQ + self.dnaQ
 
@@ -98,23 +100,23 @@ class TagTrim2Test(unittest.TestCase):
 
         r1 = read1Out.output[0].split('\n')
 
-        self.assertEqual(r1[0], f"@r1:{self.umi} c1", "Read one name wrong.")
+        self.assertEqual(r1[0], f"@r1:{self.umi1}+{self.umi2} c1", "Read one name wrong.")
         self.assertEqual(r1[1], self.dna + (TagTrim2.RSTEM if stemIn1 else self.noStem) + self.dna, "Read one read wrong.")
         self.assertEqual(r1[3], self.dnaQ + self.stemQ + self.dnaQ, "Read one base quality wrong.")
 
         r2 = read2Out.output[0].split('\n')
 
-        self.assertEqual(r2[0], f"@r2:{self.umi} c2", "Read two name wrong.")
+        self.assertEqual(r2[0], f"@r2:{self.umi1}+{self.umi2} c2", "Read two name wrong.")
         self.assertEqual(r2[1], self.dna + (self.noStem if stemIn1 else TagTrim2.RSTEM) + self.dna + self.dna, "Read two read wrong.")
         self.assertEqual(r2[3], self.dnaQ + self.stemQ + self.dnaQ + self.dnaQ, "Read two base quality wrong.")
 
     def testOverlapping(self):
 
-        b1 = self.umi + TagTrim2.STEM + self.dna + TagTrim2.RSTEM + self.dna
+        b1 = self.umi1 + TagTrim2.STEM + self.dna + TagTrim2.RSTEM + self.dna
 
         q1 = self.umiQ + self.stemQ + self.dnaQ + self.stemQ + self.dnaQ
 
-        b2 = self.umi + TagTrim2.STEM + self.dna + TagTrim2.RSTEM + self.dna + self.dna
+        b2 = self.umi2 + TagTrim2.STEM + self.dna + TagTrim2.RSTEM + self.dna + self.dna
 
         q2 = self.umiQ + self.stemQ + self.dnaQ + self.stemQ + self.dnaQ + self.dnaQ
 
@@ -130,13 +132,13 @@ class TagTrim2Test(unittest.TestCase):
 
         r1 = read1Out.output[0].split('\n')
 
-        self.assertEqual(r1[0], f"@r1:{self.umi} c1", "Read one name wrong.")
+        self.assertEqual(r1[0], f"@r1:{self.umi1}+{self.umi2} c1", "Read one name wrong.")
         self.assertEqual(r1[1], self.dna, "Read one read wrong.")
         self.assertEqual(r1[3], self.dnaQ, "Read one base quality wrong.")
 
         r2 = read2Out.output[0].split('\n')
 
-        self.assertEqual(r2[0], f"@r2:{self.umi} c2", "Read two name wrong.")
+        self.assertEqual(r2[0], f"@r2:{self.umi1}+{self.umi2} c2", "Read two name wrong.")
         self.assertEqual(r2[1], self.dna, "Read two read wrong.")
         self.assertEqual(r2[3], self.dnaQ, "Read two base quality wrong.")
 

@@ -12,6 +12,9 @@ from xopen import xopen
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
 
 class PrependUMI:
+
+    UMI_PATTERN = r'r?([ACGT]+)(\+r?([ACGT]+))?'
+
     '''
     Take any UMI from the read name (Illumina style) and put it into the read sequence.
     Tests the first read to ensure that there is a UMI to take. If not, there's no need
@@ -21,6 +24,7 @@ class PrependUMI:
         self.parser = argparse.ArgumentParser(description="PrependUMI.py - prepend any UMI from the read id to the read sequence")
         self.parser.add_argument("--source", type = Path, help = "The source FASTQ file.")
         self.parser.add_argument("--output", type = Path, help = "The output FASTQ file.")
+        self.parser.add_argument("--read", type = int, help = "The regular read number (1 or 2).")
 
         self.compressionLevel = 1
 
@@ -28,15 +32,19 @@ class PrependUMI:
         if not args:
             args = self.parser.parse_args()
 
+        if args.read not in [1, 2]:
+            raise argparse.ArgumentError("--read", "read must be either 1 or 2.")
+
         if not quiet:
             print("PrependUMI")
             print("----------")
             print(f"source file: {args.source}")
             print(f"output file: {args.output}")
+            print(f"read: {args.read}")
             print(f"compression: {self.compressionLevel}")
 
         if self.shouldProcess(args.source):
-            self.prependUmis(args.source, args.output)
+            self.prependUmis(args.source, args.output, args.read)
         else:
             print()
             print(f"{args.source} does not have UMIs in its reads.")
@@ -54,13 +62,13 @@ class PrependUMI:
             try:
                 (readId, readSeq, readQual) = next(reader)
                 segments = re.split(r'[:\s]+', readId)
-                process = len(segments) >= 8 and re.match(r'r?[ACGT]+', segments[7])
+                process = len(segments) >= 8 and re.match(PrependUMI.UMI_PATTERN, segments[7])
             except StopIteration:
                 # No records.
                 process = False
         return process
 
-    def prependUmis(self, source: Path, out: Path):
+    def prependUmis(self, source: Path, out: Path, readNumber: int):
         count = 0
 
         with xopen(source, 'rt') as readHandle, \
@@ -72,9 +80,16 @@ class PrependUMI:
                 segments = re.split(r'[:\s]+', readId)
                 assert len(segments) >= 8, f"UMIs exist in {source.name} but the record on line {count * 4 + 1} has too few elements."
 
-                umi = re.search(r'r?([ACGT]+)', segments[7])
+                umi = re.search(PrependUMI.UMI_PATTERN, segments[7])
                 assert umi, f"UMI field doesn't match the expected pattern on line {count * 4 + 1} of {source.name}"
-                umi = umi.group(1)
+                umi1 = umi.group(1)
+                umi2 = umi.group(3)
+
+                # UMI is from the first capture group. If we are processing the second read file of a pair
+                # and there is a second UMI, we'll prepend the second UMI.
+                umi = umi1
+                if readNumber == 2 and umi2:
+                    umi = umi2
 
                 readSeq = umi + readSeq
                 readQual = ('@' * len(umi)) + readQual
