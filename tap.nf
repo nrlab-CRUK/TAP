@@ -12,7 +12,6 @@ include { postAlignment } from './pipelines/alignment/postAlignment'
 include { gatk } from './pipelines/gatk'
 include { fastqc } from './processes/fastqc'
 include { publish; checksum } from './processes/finishing'
-include { recording as recordRun } from './pipelines/recording'
 
 if (!checkParameters(params))
 {
@@ -75,8 +74,4 @@ workflow
 
     fastqc(publish.out)
     checksum(publish.out)
-
-    /*
-    recordRun(csvChannel, publish.out)
-    */
 }
