@@ -120,7 +120,7 @@ process addReadGroups
  */
 process fixMateInformation
 {
-    label "picardSmall"
+    label "picard"
 
     cpus 2
 
