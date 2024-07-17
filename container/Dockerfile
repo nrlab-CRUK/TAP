@@ -3,7 +3,7 @@ FROM rockylinux:8
 RUN dnf install -y dnf-plugins-core epel-release && \
     dnf makecache && \
     dnf update -y && \
-    dnf install -y curl gcc git htslib-devel java-17-openjdk java-1.8.0-openjdk procps unzip wget && \
+    dnf install -y curl gcc git htslib-devel java-21-openjdk procps unzip wget && \
     dnf clean all
 
 # Conda
@@ -31,7 +31,7 @@ RUN ln -s /opt/AGeNT/trimmer-${AGENT_VERSION}.jar /opt/AGeNT/trimmer.jar
 
 RUN wget -O /opt/TruSeq3-PE-2with_rcUMI.fa https://takarabio.com/resourcedocument/x108592
 
-ENV JAVA_HOME /usr/lib/jvm/jre-17
+ENV JAVA_HOME /usr/lib/jvm/jre-21
 ENV GROOVY_HOME /opt/groovy-${GROOVY_VERSION}
 ENV PATH ${JAVA_HOME}/bin:${GROOVY_HOME}/bin:/opt/miniforge3/envs/tap/bin:$PATH
 
