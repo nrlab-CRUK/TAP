@@ -1,6 +1,3 @@
-@Grab('org.apache.commons:commons-csv:1.8')
-@Grab('org.apache.commons:commons-collections4:4.4')
-
 import java.nio.file.Files
 import org.apache.commons.collections4.bag.CollectionBag
 import org.apache.commons.collections4.bag.TreeBag

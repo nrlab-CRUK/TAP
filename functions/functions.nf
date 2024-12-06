@@ -2,8 +2,6 @@
  * Miscellaneous helper functions used all over the pipeline.
  */
 
-@Grab('org.apache.commons:commons-compress:1.26.1')
-
 import org.apache.commons.compress.compressors.CompressorException
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 

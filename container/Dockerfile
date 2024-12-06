@@ -20,7 +20,7 @@ RUN /opt/miniforge3/bin/mamba env create -f tap.yml && /opt/miniforge3/bin/mamba
 
 # There is no groovy in conda
 
-ARG GROOVY_VERSION=4.0.21
+ARG GROOVY_VERSION=4.0.24
 RUN wget -O /tmp/groovy.zip https://groovy.jfrog.io/artifactory/dist-release-local/groovy-zips/apache-groovy-binary-${GROOVY_VERSION}.zip && \
     unzip -d /opt /tmp/groovy.zip && \
     rm -f /tmp/groovy.zip
