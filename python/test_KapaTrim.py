@@ -21,25 +21,23 @@ class MockOutput:
 
 class KapaTrimTest(unittest.TestCase):
 
-    def setUp(self):
-        self.umi1 = '1' * KapaTrim.UMI_LENGTH
-        self.umi2 = '2' * KapaTrim.UMI_LENGTH
-        self.dna = 'd' * 4
-        self.umiQ = 'U' * KapaTrim.UMI_LENGTH
-        self.dnaQ = 'D' * len(self.dna)
+    def testTrim_0_0(self):
+        self.doTrim(0, 0)
 
-    def testTrim0(self):
-        self.doTrim(0)
+    def testTrim_6_2(self):
+        self.doTrim(6, 2)
 
-    def testTrim2(self):
-        self.doTrim(2)
+    def testTrim_8_3(self):
+        self.doTrim(8, 3)
 
-    def testTrim3(self):
-        self.doTrim(3)
-
-    def doTrim(self, spacerLength: int):
+    def doTrim(self, umiLength: int, spacerLength: int):
+        self.umi1 = '1' * umiLength
+        self.umi2 = '2' * umiLength
         self.spacer = 's' * spacerLength
+        self.dna = 'd' * 4
+        self.umiQ = 'U' * umiLength
         self.spacerQ = 'S' * spacerLength
+        self.dnaQ = 'D' * len(self.dna)
 
         b1 = self.umi1 + self.spacer + self.dna
         b2 = self.umi2 + self.spacer + self.dna
@@ -50,6 +48,7 @@ class KapaTrimTest(unittest.TestCase):
         read2 = self.basesToRecord(2, b2, q1)
 
         kapaTrim = KapaTrim()
+        kapaTrim.umiLength = umiLength
         kapaTrim.spacer = spacerLength
 
         read1Out = MockOutput()

@@ -116,7 +116,21 @@ process kapaTrim
         read1Out = "${outFilePrefix}.r_1.kapatrim.fq.gz"
         read2Out = "${outFilePrefix}.r_2.kapatrim.fq.gz"
 
-        spacerLength = 2    // Change based on library type when that's known.
+        switch (libraryPrep)
+        {
+            case 'Watchmaker_no_Fragmentation':
+                umiLength = 5
+                spacerLength = 2
+                break
+
+            case 'kapa_hyper':
+                umiLength = 3
+                spacerLength = 3
+                break
+
+            default:
+                throw new Exception("Cannot use kapa trim with ${libraryPrep}")
+        }
 
         template "trimming/kapaTrim.sh"
 }
@@ -330,7 +344,8 @@ workflow trimming
                 unitId, chunk, read1, read2, libraryPrep ->
                 tagtrim : libraryPrep == 'Thruplex_Tag_seq'
                 agentTrimmer : libraryPrep == 'Agilent_XTHS2'
-                trimmomatic : libraryPrep == 'Thruplex_Tag_seq_HV'
+                trimmomatic : libraryPrep in [ 'Thruplex_Tag_seq_HV', 'neb_ultra2' ]
+                kapaTrim : libraryPrep in [ 'Watchmaker_no_Fragmentation', 'kapa_hyper' ]
                 trimGalore : params.TRIM_FASTQ
                 noTrim : true
             }
