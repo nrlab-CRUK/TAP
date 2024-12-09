@@ -99,6 +99,28 @@ process trimmomatic
         template "trimming/trimmomatic.sh"
 }
 
+process kapaTrim
+{
+    memory { 256.MB * task.attempt }
+    time { 12.hour * task.attempt }
+    maxRetries 1
+
+    input:
+        tuple val(unitId), val(chunk), path(read1In), path(read2In), val(libraryPrep)
+
+    output:
+        tuple val(unitId), val(chunk), path(read1Out), path(read2Out)
+
+    shell:
+        outFilePrefix = "${safeName(unitId)}.c_${chunk}"
+        read1Out = "${outFilePrefix}.r_1.kapatrim.fq.gz"
+        read2Out = "${outFilePrefix}.r_2.kapatrim.fq.gz"
+
+        spacerLength = 2    // Change based on library type when that's known.
+
+        template "trimming/kapaTrim.sh"
+}
+
 process prependXTHS2UMI
 {
     memory { 1.GB * task.attempt }
