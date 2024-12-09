@@ -123,7 +123,7 @@ process kapaTrim
                 spacerLength = 2
                 break
 
-            case 'kapa_hyper':
+            case 'KAPA_HyperPrep':
                 umiLength = 3
                 spacerLength = 3
                 break
