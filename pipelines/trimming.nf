@@ -344,7 +344,7 @@ workflow trimming
                 unitId, chunk, read1, read2, libraryPrep ->
                 tagtrim : libraryPrep == 'Thruplex_Tag_seq'
                 agentTrimmer : libraryPrep == 'Agilent_XTHS2'
-                trimmomatic : libraryPrep in [ 'Thruplex_Tag_seq_HV', 'NEBNext_Ultra_II' ]
+                trimmomatic : libraryPrep in [ 'Thruplex_Tag_seq_HV' ]
                 kapaTrim : libraryPrep in [ 'Watchmaker_no_Fragmentation', 'KAPA_HyperPrep' ]
                 trimGalore : params.TRIM_FASTQ
                 noTrim : true
