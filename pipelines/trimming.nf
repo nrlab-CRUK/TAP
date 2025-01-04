@@ -283,6 +283,18 @@ workflow trimmomaticWF
         trimmedChannel = trimmomatic.out
 }
 
+workflow kapaTrimWF
+{
+    take:
+        fastqChannel
+
+    main:
+        kapaTrim(fastqChannel)
+
+    emit:
+        trimmedChannel = kapaTrim.out
+}
+
 workflow noTrimWF
 {
     take:
@@ -354,9 +366,10 @@ workflow trimming
         tagtrimWF(trimChoice.tagtrim)
         agentTrimmerWF(trimChoice.agentTrimmer)
         trimmomaticWF(trimChoice.trimmomatic)
+        kapaTrimWF(trimChoice.kapaTrim)
         noTrimWF(trimChoice.noTrim)
 
-        afterTrimmingChannel = noTrimWF.out.mix(trimGaloreWF.out).mix(tagtrimWF.out).mix(agentTrimmerWF.out).mix(trimmomaticWF.out)
+        afterTrimmingChannel = noTrimWF.out.mix(trimGaloreWF.out).mix(tagtrimWF.out).mix(agentTrimmerWF.out).mix(trimmomaticWF.out).mix(kapaTrimWF.out)
 
     emit:
         afterTrimmingChannel
