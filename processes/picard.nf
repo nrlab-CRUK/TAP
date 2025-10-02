@@ -2,8 +2,6 @@
  * Picard tools.
  */
 
-@Grab('org.apache.commons:commons-lang3:3.12.0')
-
 import static org.apache.commons.lang3.StringUtils.trimToNull
 
 include { javaMemoryOptions; safeName } from "../modules/nextflow-support/functions"
