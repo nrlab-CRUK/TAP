@@ -150,7 +150,7 @@ process mergeOrMarkDuplicates
 
     output:
         tuple val(unitId), path(outBam), path(outBai), emit: merged_bam
-        path metrics optional true
+        path(metrics), optional: true, emit: metrics
 
     shell:
         safeUnitId = safeName(unitId)
